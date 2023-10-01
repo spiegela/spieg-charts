@@ -1,0 +1,97 @@
+image:
+  repository: felddy/foundryvtt
+  pullPolicy: IfNotPresent
+  tag: release-9.266
+
+service:
+  main:
+    ports:
+      main:
+        port: 80
+
+persistence:
+  data:
+    enabled: true
+    mountPath: /data
+  shared:
+    enabled: true
+    mountPath: /shared
+  awsS3config:
+    enabled: false
+    mountPath: /etc/awsS3config
+    objectName: s3
+    items:
+      - key: aws-credentials.json
+        path: aws-credentials.json
+
+portal:
+  open:
+    enabled: true
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          probes:
+            liveness:
+              initialDelaySeconds: 600
+              failureThreshold: 40
+              periodSeconds: 25
+              enabled: true
+              type: http
+              path: /
+            readiness:
+              initialDelaySeconds: 30
+              enabled: true
+              type: http
+              path: /
+            startup:
+              enabled: true
+              type: http
+              path: /
+          envFrom:
+            - secretRef:
+                name: main
+            - configMapRef:
+                name: main
+                expandObjectName: false
+
+configmap:
+  main:
+    data:
+      FOUNDRY_UID: '{{ .Values.securityContext.runAsUser | default 1000 }}'
+      FOUNDRY_GID: '{{ .Values.securityContext.runAsGroup | default 1000 }}'
+      FOUNDRY_HOSTNAME: '{{ .Values.ingress.main.hosts[0].host | default "foundryvtt.local" }}'
+      UV_THREADPOOL_SIZE: "6"
+      CONTAINER_CACHE: /data/container_cache
+      CONTAINER_PATCHES: /data/container_patches
+      CONTAINER_PATCH_URLS:
+      CONTAINER_PRESERVE_CONFIG: /data/container_preserve_config
+      CONTAINER_PRESERVE_OWNER: "true"
+      TIMEZONE: UTC
+      CONTAINER_VERBOSE: "false"
+      FOUNDRY_RELEASE_URL:
+      FOUNDRY_LANGUAGE: en.core
+      FOUNDRY_MINIFY_STATIC_FILES: "true"
+      FOUNDRY_WORLD:
+
+secret:
+  main:
+    enabled: true
+    data:
+      FOUNDRY_ADMIN_KEY:
+      FOUNDRY_USERNAME:
+      FOUNDRY_PASSWORD:
+      LICENSE_KEY:
+  s3:
+    enabled: false
+    data:
+      aws-credentials.json: |-
+        {{- if .Values.secret.s3.enabled }}
+        {
+          "accessKeyId": {{ .Values.secret.s3.accessKeyId | quote }},
+          "secretAccessKey": {{ .Values.secret.s3.secretAccessKey | quote }},
+          "region": {{ .Values.secret.s3.region | quote }}
+        }
+        {{- end }}
