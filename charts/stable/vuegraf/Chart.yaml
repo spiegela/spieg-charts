@@ -1,0 +1,28 @@
+apiVersion: v2
+appVersion: "3.0.10.156"
+dependencies:
+  - name: common
+    repository: https://library-charts.truecharts.org
+    version: 12.10.4
+deprecated: false
+home: https://github.com/jertel/vuegraf
+icon: https://avatars.githubusercontent.com/u/106610688
+keywords:
+  - home-automation
+  - vuegraf
+  - vue
+  - influxdb
+kubeVersion: ">=1.16.0-0"
+maintainers:
+  - email: spiegela@gmail.com
+    name: Aaron Spiegel
+name: Vuegraf
+description: Emporia Vue InfluxDB Integration
+sources:
+  - https://github.com/jertel/vuegraf
+type: application
+version: 0.0.1
+annotations:
+  truecharts.org/catagories: |
+    - Home-Automation
+  truecharts.org/SCALE-support: "false"

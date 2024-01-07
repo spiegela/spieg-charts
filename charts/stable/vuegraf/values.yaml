@@ -1,0 +1,70 @@
+image:
+  repository: jertel/vuegraf
+  pullPolicy: IfNotPresent
+  tag: 1.6.1
+
+influxdb:
+  url: http://influxdb2.ix-influxdb2.svc.cluster.local
+  org: influxdata
+  bucket: vuegraf
+  token:
+account:
+  name:
+  email:
+  password:
+devices: []
+
+service:
+  main:
+    enabled: false
+
+persistence:
+  config:
+    enabled: true
+    type: secret
+    objectName: main
+    expandObjectName: true
+    optional: false
+    defaultMode: "0755"
+    mountPath: /opt/vuegraf/conf/
+
+portal:
+  open:
+    enabled: false
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          args:
+            - /opt/vuegraf/conf/vuegraf.json
+          probes:
+            liveness:
+              enabled: false
+            readiness:
+              enabled: false
+            startup:
+              enabled: false
+
+secret:
+  main:
+    enabled: true
+    data:
+      vuegraf.json: |-
+        {
+          "influxDb": {
+            "version": 2,
+            "url": {{ .Values.influxdb.url | required "influxdb.url is required" | quote }},
+            "org": {{ .Values.influxdb.org | required "influxdb.org is required" | quote }},
+            "bucket": {{ .Values.influxdb.bucket | required "influxdb.bucket is required" | quote }},
+            "token": {{ .Values.influxdb.token | required "influxdb.token is required" | quote }}
+          },
+          "accounts": [
+            {
+              "name": {{ .Values.account.name | required "accounts.name is required" | quote }},
+              "email": {{ .Values.account.email | required "accounts.email is required" | quote }},
+              "password": {{ .Values.account.password | required "accounts.password is required" | quote }}
+            }
+          ]
+        }
