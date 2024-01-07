@@ -2,8 +2,8 @@ apiVersion: v2
 appVersion: "3.0.10.156"
 dependencies:
   - name: common
-    repository: https://library-charts.truecharts.org
-    version: 12.10.4
+    repository: oci://tccr.io/truecharts
+    version: 17.2.21
 deprecated: false
 home: https://github.com/jertel/vuegraf
 icon: https://avatars.githubusercontent.com/u/106610688
