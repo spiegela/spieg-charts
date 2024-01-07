@@ -106,15 +106,6 @@ jobs:
         id: collect-changes
         uses: ./.github/actions/collect-changes
 
-      - name: Generate Changelog
-        shell: bash
-        if: |
-          steps.collect-changes.outputs.changesDetectedAfterTag == 'true'
-        run: |
-          CHARTS=(${{ steps.collect-changes.outputs.modifiedChartsAfterTag }})
-          parthreads=$(($(nproc) * 2))
-          parallel -j ${parthreads} .github/scripts/changelog.sh '2>&1' ::: ${CHARTS[@]}
-
       - name: Fix Pre-Commit issues
         shell: bash
         if: |
