@@ -17,13 +17,13 @@ jobs:
       image: ghcr.io/truecharts/devcontainer:3.1.10@sha256:c239addf725eb5cedf79517f8089fdafdc32b5270d1893ee87ae6e511b9bcae3
     steps:
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
         with:
           token: ${{ secrets.BOT_TOKEN }}
           fetch-depth: 1
 
       - name: Checkout Helm-Staging
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
         with:
           fetch-depth: 1
           repository: spiegela/spieg-truenas-staging
@@ -33,8 +33,7 @@ jobs:
       - name: Fix Pre-Commit issues
         shell: bash
         run: |
-          echo "Running pre-commit test-and-cleanup..."
-          pre-commit run --all ||:
+          echo "Running pre-commit test-and-cleanup..."          pre-commit run --all ||:
           # Fix sh files to always be executable
           find . -name '*.sh' | xargs chmod +x
 
@@ -66,7 +65,7 @@ jobs:
         with:
           setup-tools: |
             helmv3
-          helm: "3.8.0"
+          helm: "3.13.2"
 
       - name: Prep Helm
         run: |
@@ -94,7 +93,7 @@ jobs:
           GPG_PASSPHRASE: "${{ secrets.GPG_PASSPHRASE }}"
 
       - name: Checkout
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
         with:
           token: ${{ secrets.BOT_TOKEN }}
           fetch-depth: 0
@@ -116,8 +115,18 @@ jobs:
           # Fix sh files to always be executable
           find . -name '*.sh' | xargs chmod +x
 
+      - name: Checkout
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
+        if: |
+          steps.collect-changes.outputs.changesDetectedAfterTag == 'true'
+        with:
+          fetch-depth: 1
+          repository: truecharts/website
+          token: ${{ secrets.BOT_TOKEN }}
+          path: website
+
       - name: Checkout Catalog
-        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab # v3
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
         if: |
           steps.collect-changes.outputs.changesDetectedAfterTag == 'true'
         with:
@@ -133,10 +142,7 @@ jobs:
           steps.collect-changes.outputs.changesDetectedAfterTag == 'true'
         run: |
           CHARTS=(${{ steps.collect-changes.outputs.modifiedChartsAfterTag }})
-          charts_path="charts"
-          for changed in ${CHARTS[@]}; do
-            .github/scripts/fetch_helm_deps.sh "${changed}"
-          done
+          ./charttool deps
           pip install yq
           parthreads=$(($(nproc) * 2))
           parallel -j ${parthreads} .github/scripts/build-catalog.sh '2>&1' ::: ${CHARTS[@]}
@@ -180,7 +186,7 @@ jobs:
           GPG_PASSPHRASE: "${{ secrets.GPG_PASSPHRASE }}"
 
       - name: Run chart-releaser for dependency apps
-        uses: helm/chart-releaser-action@be16258da8010256c6e82849661221415f031968 # v1.5.0
+        uses: helm/chart-releaser-action@a917fd15b20e8b64b94d9158ad54cd6345335584 # v1.6.0
         if: |
           steps.collect-changes.outputs.changesDetectedAfterTag == 'true'
         with:

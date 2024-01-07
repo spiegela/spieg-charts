@@ -25,4 +25,4 @@ version: 0.0.1
 annotations:
   truecharts.org/catagories: |
     - Home-Automation
-  truecharts.org/SCALE-support: "false"
+  truecharts.org/SCALE-support: "true"

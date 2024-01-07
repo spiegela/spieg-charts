@@ -74,15 +74,11 @@ patch_apps() {
     cat ${target}/Chart.yaml | grep "icon" >> catalog/${train}/${chartname}/item.yaml
     sed -i "s|^icon:|icon_url:|g" catalog/${train}/${chartname}/item.yaml
     echo "categories:" >> catalog/${train}/${chartname}/item.yaml
-    cat ${target}/Chart.yaml | yq '.annotations."truecharts.org/catagories"' -r >> catalog/${train}/${chartname}/item.yaml
-    # Copy changelog from website
-    if [[ ! -f "website/docs/charts/${train}/${chartname}/CHANGELOG.md" ]]; then
-        touch "website/docs/charts/${train}/${chartname}/CHANGELOG.md"
-    fi
-    cp -rf "website/docs/charts/${train}/${chartname}/CHANGELOG.md" "${target}/CHANGELOG.md" 2>/dev/null || :
-    sed -i '1d' "${target}/CHANGELOG.md"
-    sed -i '1s/^/*for the complete changelog, please refer to the website*\n\n/' "${target}/CHANGELOG.md"
-    sed -i '1s/^/**Important:**\n/' "${target}/CHANGELOG.md"
+    category=$(cat ${target}/Chart.yaml | yq '.annotations."truecharts.org/category"' -r)
+    echo "- $category" >> catalog/${train}/${chartname}/item.yaml
+
+    echo "Truncating changelog for: ${chartname}"
+    # Truncate changelog to only contain the last 100 lines
     sed -i '100,$ d' "${target}/CHANGELOG.md" || :
     # Generate SCALE App description file
     cat ${target}/Chart.yaml | yq .description -r >> ${target}/app-readme.md
@@ -93,6 +89,7 @@ patch_apps() {
     echo "" >> ${target}/app-readme.md
     echo "TrueCharts can only exist due to the incredible effort of our staff." >> ${target}/app-readme.md
     echo "Please consider making a [donation](https://truecharts.org/sponsor) or contributing back to the project any way you can!" >> ${target}/app-readme.md
+    echo "app-readme generated"
 }
 export -f patch_apps
 
@@ -108,6 +105,7 @@ copy_apps() {
 }
 export -f copy_apps
 
+rm -rf charts/unstable
 if [[ -d "charts/${1}" ]]; then
     echo "Start processing charts/${1} ..."
     chartversion=$(cat charts/${1}/Chart.yaml | grep "^version: " | awk -F" " '{ print $2 }')
