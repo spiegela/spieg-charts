@@ -1,21 +1,42 @@
 image:
   repository: felddy/foundryvtt
   pullPolicy: IfNotPresent
-  tag: release-9.266
+  tag: 11.315.0
+
+securityContext:
+  container:
+    readOnlyRootFilesystem: false
+    runAsNonRoot: false
+    runAsUser: 0
+    runAsGroup: 0
+
+foundry:
+  hostname:
+  adminKey:
+  licenseKey:
+  username:
+  password:
+  passwordSalt:
 
 service:
   main:
     ports:
       main:
-        port: 80
+        port: 30000
 
 persistence:
-  data:
+  config:
     enabled: true
     mountPath: /data
-  shared:
-    enabled: true
-    mountPath: /shared
+    readOnly: false
+    targetSelector:
+      main:
+        main:
+          mountPath: /data
+    size: 64Gi
+    type: pvc
+    volumeSnapshots: [ ]
+
   awsS3config:
     enabled: false
     mountPath: /etc/awsS3config
@@ -53,16 +74,14 @@ workload:
           envFrom:
             - secretRef:
                 name: main
-            - configMapRef:
-                name: main
-                expandObjectName: false
 
-configmap:
+secret:
   main:
+    enabled: true
     data:
       FOUNDRY_UID: '{{ .Values.securityContext.runAsUser | default 1000 }}'
       FOUNDRY_GID: '{{ .Values.securityContext.runAsGroup | default 1000 }}'
-      FOUNDRY_HOSTNAME: '{{ .Values.ingress.main.hosts[0].host | default "foundryvtt.local" }}'
+      FOUNDRY_HOSTNAME: '{{ .Values.foundry.hostname | default "foundryvtt.local" }}'
       UV_THREADPOOL_SIZE: "6"
       CONTAINER_CACHE: /data/container_cache
       CONTAINER_PATCHES: /data/container_patches
@@ -75,15 +94,11 @@ configmap:
       FOUNDRY_LANGUAGE: en.core
       FOUNDRY_MINIFY_STATIC_FILES: "true"
       FOUNDRY_WORLD:
-
-secret:
-  main:
-    enabled: true
-    data:
-      FOUNDRY_ADMIN_KEY:
-      FOUNDRY_USERNAME:
-      FOUNDRY_PASSWORD:
-      LICENSE_KEY:
+      FOUNDRY_ADMIN_KEY: '{{ .Values.foundry.adminKey }}'
+      FOUNDRY_USERNAME: '{{ .Values.foundry.username }}'
+      FOUNDRY_PASSWORD: '{{ .Values.foundry.password }}'
+      LICENSE_KEY: '{{ .Values.foundry.licenseKey }}'
+      FOUNDRY_PASSWORD_SALT: '{{ .Values.foundry.passwordSalt }}'
   s3:
     enabled: false
     data:
@@ -95,3 +110,27 @@ secret:
           "region": {{ .Values.secret.s3.region | quote }}
         }
         {{- end }}
+
+resources:
+  limits:
+    cpu: 4000m
+    memory: 8Gi
+  requests:
+    cpu: 100m
+    memory: 100Mi
+
+ixChartContext:
+  addNvidiaRuntimeClass: false
+  hasNFSCSI: true
+  hasSMBCSI: true
+  isInstall: true
+  isUpdate: false
+  isUpgrade: false
+  kubernetes_config:
+    cluster_cidr: 172.16.0.0/16
+    cluster_dns_ip: 172.17.0.10
+    service_cidr: 172.17.0.0/16
+  nfsProvisioner: nfs.csi.k8s.io
+  nvidiaRuntimeClassName: nvidia
+  operation: UPDATE
+  smbProvisioner: smb.csi.k8s.io
