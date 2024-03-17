@@ -1,0 +1,13 @@
+---
+apiVersion: v2
+name: ddb-proxy
+description: This proxy allows for communication with DDB for use integrating content into Foundry VTT.
+type: application
+version: 1.0.0
+appVersion: "v0.0.17"
+sources:
+  - https://github.com/MrPrimate/ddb-proxy
+dependencies:
+  - name: common
+    repository: https://library-charts.k8s-at-home.com
+    version: 4.4.2
