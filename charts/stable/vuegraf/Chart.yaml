@@ -3,7 +3,7 @@ appVersion: "3.0.10.156"
 dependencies:
   - name: common
     repository: oci://tccr.io/truecharts
-    version: 17.2.21
+    version: 25.4.2
 deprecated: false
 home: https://github.com/jertel/vuegraf
 icon: https://avatars.githubusercontent.com/u/106610688
@@ -21,8 +21,4 @@ description: Emporia Vue InfluxDB Integration
 sources:
   - https://github.com/jertel/vuegraf
 type: application
-version: 0.0.1
-annotations:
-  truecharts.org/catagories: |
-    - Home-Automation
-  truecharts.org/SCALE-support: "true"
+version: 0.0.2
