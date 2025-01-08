@@ -1,0 +1,22 @@
+apiVersion: v2
+name: samba-server
+description: "A Helm chart for samba server."
+type: application
+version: 0.1.0
+appVersion: "s4.20.6-r1"
+
+keywords:
+  - samba
+  - cifs
+  - fileserver
+home: "https://github.com/servercontainers/samba"
+icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Logo_Samba_Software.svg/800px-Logo_Samba_Software.svg.png"
+
+maintainers:
+  - email: spiegela@gmail.com
+    name: Aaron Spiegel
+
+dependencies:
+  - name: common
+    repository: oci://tccr.io/truecharts
+    version: 25.4.2

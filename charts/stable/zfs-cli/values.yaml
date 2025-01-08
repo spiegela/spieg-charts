@@ -1,0 +1,41 @@
+image:
+  repository: evandeaubl/zfs
+  pullPolicy: IfNotPresent
+  tag: latest
+
+service:
+  main:
+    enabled: false
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          command:
+            - ash
+          args:
+            - -c
+            - |-
+              while true; do
+                sleep 300
+              done
+          probes:
+            liveness:
+              enabled: false
+            readiness:
+              enabled: false
+            startup:
+              enabled: false
+
+securityContext:
+  main:
+    runAsUser: 0
+    runAsGroup: 0
+    fsGroup: 0
+    allowPrivilegeEscalation: true
+    capabilities:
+      add:
+        - SYS_ADMIN
+        - SYS_MODULE
+

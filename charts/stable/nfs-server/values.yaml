@@ -1,0 +1,138 @@
+########################################
+# Container Image (NFS Server)         #
+########################################
+image:
+  repository: erichough/nfs-server
+  pullPolicy: IfNotPresent
+  tag: 2.2.1
+
+###############################################
+# NFS Server-Specific Settings & Environment  #
+###############################################
+# We'll store the "NFS_VERSION" in envList, referencing nfsServer.version below
+nfsServer:
+  version: 3
+  # Example exports array. Adjust path, clientPattern, and options as needed.
+  exports:
+    - path: /exports
+      clientPattern: "*"
+      options: rw,fsid=0,insecure,no_subtree_check,no_root_squash
+
+####################################
+# Security Context Override        #
+####################################
+# By default, TrueCharts runs containers as non-root.
+# NFS server typically needs root privileges + capabilities to load kernel modules.
+securityContext:
+  container:
+    runAsUser: 0
+    runAsGroup: 0
+    fsGroup: 0
+    allowPrivilegeEscalation: true
+    readOnlyRootFilesystem: false
+    capabilities:
+      add:
+        - SYS_ADMIN
+        - SYS_MODULE
+      drop: []
+  pod:
+    fsGroup: 0
+    fsGroupChangePolicy: OnRootMismatch
+
+###########################################
+# Main Workload (Deployment or DaemonSet) #
+###########################################
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          envList:
+            # Tells the container which NFS version(s) to run.
+            - name: NFS_VERSION
+              value: "{{ .Values.nfsServer.version | quote }}"
+          probes:
+            # Liveness, readiness, startup checking via TCP socket to port 2049 (NFS)
+            liveness:
+              enabled: true
+              type: tcp
+              port: 2049
+            readiness:
+              enabled: true
+              type: tcp
+              port: 2049
+            startup:
+              enabled: true
+              type: tcp
+              port: 2049
+
+###################################
+# Services (Ports for NFSv3/4)    #
+###################################
+service:
+  main:
+    enabled: true
+    primary: true
+    ports:
+      main:
+        port: 2049
+        targetPort: 2049
+        protocol: tcp
+      rpcinfo:
+        enabled: true
+        port: 111
+        targetPort: 111
+        protocol: tcp
+      rpcinfoUdp:
+        enabled: true
+        port: 111
+        targetPort: 111
+        protocol: udp
+      statd:
+        enabled: true
+        port: 32765
+        targetPort: 32765
+        protocol: tcp
+      mountd:
+        enabled: true
+        port: 32767
+        targetPort: 32767
+        protocol: tcp
+
+##################################
+# Persistence (PVC for /shares)  #
+##################################
+persistence:
+  # This example sets a single PVC mounted at /shares.
+  # Adjust the name, size, etc., as needed.
+  shares:
+    enabled: true
+    type: pvc
+    mountPath: "/shares"
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    # If needed, specify a storageClassName:
+    # storageClass: "nfs-client"
+  exports:
+    enabled: true
+    type: configmap
+    objectName: main
+    expandObjectName: true
+    optional: false
+    mountPath: "/etc/exports"
+    subPath: "exports.txt"
+    readOnly: true
+
+#################################
+# ConfigMap for /etc/exports    #
+#################################
+# The container will read /etc/exports to determine which paths to share.
+configmap:
+  main:
+    enabled: true
+    # We'll dynamically render the exports.txt file from the `nfsServer.exports` array
+    data:
+      exports.txt: |-
+        {{- range .Values.nfsServer.exports }}
+        {{ .path }} {{ if .clientPattern }}{{ .clientPattern }}{{ end }}({{ .options }})
+        {{- end }}

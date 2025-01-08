@@ -1,0 +1,136 @@
+#-----------------------------------------------------------------------------------
+# Main samba configuration
+#-----------------------------------------------------------------------------------
+samba:
+  # Global (non-secret) settings can still be configured here, if needed
+  # e.g. mapToGuest, logLevel, etc.
+  mapToGuest: "Bad User"
+  logLevel: "1"
+
+# A list of accounts, each with username + password (or Samba hash).
+accounts:
+  - username: "alice"
+    password: "alicePassword"
+  - username: "bob"
+    password: "bobPassword"
+
+# A list of Samba shares
+shares:
+  - name: "public"
+    configLines:
+      - "path = /shares/public"
+      - "browseable = yes"
+      - "read only = no"
+      - "guest ok = yes"
+      # fruit:time machine = yes  # Example if needed
+  - name: "private"
+    configLines:
+      - "path = /shares/private"
+      - "browseable = no"
+      - "read only = no"
+      - "valid users = alice"
+      - "invalid users = bob"
+
+# Example for global config stanza lines if needed
+globalStanzaLines:
+  - "min protocol = SMB2"
+  - "unix extensions = no"
+
+#-----------------------------------------------------------------------------------
+# Image settings
+#-----------------------------------------------------------------------------------
+image:
+  repository: "ghcr.io/servercontainers/samba"
+  tag: "smbd-wsdd2-a3.21.0-s4.20.6-r1"
+  pullPolicy: "IfNotPresent"
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          envFrom:
+            - secretRef:
+                name: main
+                expandObjectName: true
+          probes:
+            liveness:
+              enabled: true
+              type: tcp
+              port: 445
+            readiness:
+              enabled: true
+              type: tcp
+              port: 445
+            startup:
+              enabled: false
+              type: tcp
+              port: 445
+
+#-----------------------------------------------------------------------------------
+# Security context and container-level settings
+#-----------------------------------------------------------------------------------
+#
+# If you want WSDD2 to run properly, it needs CAP_NET_ADMIN.
+# Also note that you might want to run as root (UID 0) if you’re managing user IDs.
+#
+securityContext:
+  main:
+    runAsUser: 0
+    runAsGroup: 0
+    capabilities:
+      add:
+        - NET_ADMIN
+    # If desired, drop additional capabilities here or adjust privileges.
+
+#-----------------------------------------------------------------------------------
+# Persistence (making /shares persistent across pod restarts)
+#-----------------------------------------------------------------------------------
+persistence:
+  # You can rename this “data” or “shares” or anything you wish.
+  shares:
+    enabled: true
+    mountPath: "/shares"
+    # Access mode and size can be changed as needed.
+    accessMode: "ReadWriteOnce"
+    size: "10Gi"
+
+  # If you also want to mount external Avahi configs, you could add a second volume like:
+  # avahi:
+  #   enabled: true
+  #   mountPath: "/external/avahi"
+
+###################################
+# Services for Samba (TCP + UDP)  #
+###################################
+service:
+  main:
+    enabled: true
+    ports:
+      # SMB (TCP/445)
+      main:
+        enabled: true
+        protocol: tcp
+        port: 445
+        # Optionally clusterIP, NodePort, etc.:
+        # nodePort: 30445
+      # NetBIOS-SSN (TCP/139)
+      netbiosSsn:
+        enabled: true
+        protocol: tcp
+        port: 139
+      # NetBIOS-NS (UDP/137)
+      netbiosNs:
+        enabled: true
+        protocol: udp
+        port: 137
+      # NetBIOS-DGM (UDP/138)
+      netbiosDgm:
+        enabled: true
+        protocol: udp
+        port: 138
+
+secret:
+  main:
+    enabled: true
+    data: {}

@@ -1,0 +1,19 @@
+apiVersion: v2
+appVersion: "0.0.1"
+dependencies:
+  - name: common
+    repository: oci://tccr.io/truecharts
+    version: 25.4.2
+deprecated: false
+home: https://hub.docker.com/r/evandeaubl/zfs/
+keywords:
+  - zfs
+kubeVersion: ">=1.16.0-0"
+maintainers:
+  - email: spiegela@gmail.com
+    name: Aaron Spiegel
+name: ZFS-CLI
+description: ZFS CLI
+sources: []
+type: application
+version: 0.0.1
