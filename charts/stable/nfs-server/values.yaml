@@ -83,7 +83,7 @@ service:
         port: 111
         targetPort: 111
         protocol: tcp
-      rpcinfoUdp:
+      rpcinfoudp:
         enabled: true
         port: 111
         targetPort: 111

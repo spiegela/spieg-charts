@@ -1,18 +1,19 @@
 #-----------------------------------------------------------------------------------
 # Main samba configuration
 #-----------------------------------------------------------------------------------
-samba:
+samba: {}
   # Global (non-secret) settings can still be configured here, if needed
   # e.g. mapToGuest, logLevel, etc.
-  mapToGuest: "Bad User"
-  logLevel: "1"
+  #
+  # mapToGuest: "Bad User"
+  # logLevel: "1"
 
 # A list of accounts, each with username + password (or Samba hash).
-accounts:
-  - username: "alice"
-    password: "alicePassword"
-  - username: "bob"
-    password: "bobPassword"
+accounts: []
+  # - username: "alice"
+  #   password: "alicePassword"
+  # - username: "bob"
+  #   password: "bobPassword"
 
 # A list of Samba shares
 shares:
@@ -115,17 +116,17 @@ service:
         # Optionally clusterIP, NodePort, etc.:
         # nodePort: 30445
       # NetBIOS-SSN (TCP/139)
-      netbiosSsn:
+      netbiosssn:
         enabled: true
         protocol: tcp
         port: 139
       # NetBIOS-NS (UDP/137)
-      netbiosNs:
+      netbiosns:
         enabled: true
         protocol: udp
         port: 137
       # NetBIOS-DGM (UDP/138)
-      netbiosDgm:
+      netbiosdgm:
         enabled: true
         protocol: udp
         port: 138
