@@ -24,3 +24,5 @@ workload:
               path: /ping
             readiness:
               path: /ping
+            startup:
+              path: /ping
