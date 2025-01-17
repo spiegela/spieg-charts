@@ -23,4 +23,4 @@ description: Foundry Virtual Tabletop
 sources:
   - https://github.com/hugoprudente/charts/tree/main/incubator/foundry-vtt
 type: application
-version: 0.0.1
+version: 0.0.2

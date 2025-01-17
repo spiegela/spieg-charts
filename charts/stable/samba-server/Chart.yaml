@@ -2,7 +2,7 @@ apiVersion: v2
 name: samba-server
 description: "A Helm chart for samba server."
 type: application
-version: 0.1.0
+version: 0.1.1
 appVersion: "s4.20.6-r1"
 
 keywords:
