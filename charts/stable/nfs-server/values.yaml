@@ -50,7 +50,7 @@ workload:
           envList:
             # Tells the container which NFS version(s) to run.
             - name: NFS_VERSION
-              value: "{{ .Values.nfsServer.version | quote }}"
+              value: {{ .Values.nfsServer.version }}
           probes:
             # Liveness, readiness, startup checking via TCP socket to port 2049 (NFS)
             liveness:
