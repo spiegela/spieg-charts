@@ -1,0 +1,16 @@
+image:
+  repository: allaboutduncan/comic-utils-web
+  tag: latest
+  pullPolicy: Always
+
+service:
+  main:
+    ports:
+      main:
+        port: 5577
+
+persistence:
+  comics:
+    enabled: true
+    mountPath: /data
+    readOnly: false

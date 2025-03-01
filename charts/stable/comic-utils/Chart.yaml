@@ -1,0 +1,13 @@
+---
+apiVersion: v2
+name: comic-utils
+description: A set of utilities for managing large comic libraries in Komga
+type: application
+version: 1.0.0
+appVersion: "v1.2"
+sources:
+  - https://github.com/allaboutduncan/comic-utils
+dependencies:
+  - name: common
+    repository: oci://tccr.io/truecharts
+    version: 25.4.2

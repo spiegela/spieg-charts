@@ -1,0 +1,23 @@
+image:
+  repository: ghcr.io/music-assistant/server
+  tag: latest
+  pullPolicy: Always
+
+service:
+  main:
+    ports:
+      main:
+        port: 8095
+
+securityContext:
+  container:
+    capabilities:
+      add:
+        - SYS_ADMIN
+        - DAC_READ_SEARCH
+
+persistence:
+  data:
+    enabled: true
+    mountPath: /data
+    readOnly: false
