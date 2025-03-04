@@ -1,0 +1,13 @@
+---
+apiVersion: v2
+name: bytebase
+description: Bytebase is a Database CI/CD solution for the Developers and DBAs.
+type: application
+version: 1.0.0
+appVersion: "3.4.1"
+sources:
+  - https://www.bytebase.com/
+dependencies:
+  - name: common
+    repository: oci://tccr.io/truecharts
+    version: 25.4.2
