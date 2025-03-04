@@ -1,0 +1,55 @@
+image:
+  repository: bytebase/bytebase
+  tag: "3.4.1"
+  pullPolicy: IfNotPresent
+
+disableSample: false
+
+workload:
+  main:
+    type: StatefulSet
+    podSpec:
+      containers:
+        main:
+          env:
+            PG_URL:
+              secretKeyRef:
+                name: cnpg-main-urls
+                key: std
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              exec bytebase \
+              --data \
+              {{ .Values.persistence.data.mountPath | quote }} \
+              --port \
+              {{ .Values.service.main.ports.main.port | quote }} \
+              {{- if and (.Values.ingress.main.enabled) (gt (len .Values.ingress.main.hosts) 0) -}}
+              --external-url \
+              {{ printf "https://%s/" (index .Values.ingress.main.hosts 0).host | quote }} \
+              {{- end -}}
+              {{- if .Values.disableSample }}
+              --disable-sample
+              {{- end }}
+
+service:
+  main:
+    ports:
+      main:
+        port: 8080
+
+persistence:
+  data:
+    enabled: true
+    mountPath: /data
+    readOnly: false
+  shared:
+    enabled: true
+
+cnpg:
+  main:
+    enabled: true
+    user: bytebase
+    database: bytebase
