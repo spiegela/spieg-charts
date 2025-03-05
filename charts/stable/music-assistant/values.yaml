@@ -3,11 +3,17 @@ image:
   tag: latest
   pullPolicy: Always
 
+
 service:
   main:
     ports:
       main:
         port: 8095
+      stream:
+        enabled: true
+        port: 8096
+        targetPort: 8096
+        protocol: tcp
 
 securityContext:
   container:
