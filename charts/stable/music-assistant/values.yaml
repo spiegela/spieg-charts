@@ -1,18 +1,69 @@
 image:
   repository: ghcr.io/music-assistant/server
+  tag: beta
+  pullPolicy: Always
+
+apiBridgeImage:
+  repository: ghcr.io/alams154/music-assistant-alexa-api
   tag: latest
   pullPolicy: Always
 
+workload:
+  main:
+    podSpec:
+      containers:
+        apibridge:
+          enabled: true
+          primary: false
+          imageSelector: apiBridgeImage
+          probes:
+            liveness:
+              enabled: true
+              type: "{{ .Values.service.main.ports.apibridge.protocol }}"
+              port: "{{ $.Values.service.main.ports.apibridge.targetPort | default .Values.service.main.ports.apibridge.port }}"
+            readiness:
+              enabled: true
+              type: "{{ .Values.service.main.ports.apibridge.protocol }}"
+              port: "{{ $.Values.service.main.ports.apibridge.targetPort | default .Values.service.main.ports.apibridge.port }}"
+            startup:
+              enabled: true
+              type: "{{ .Values.service.main.ports.apibridge.protocol }}"
+              port: "{{ $.Values.service.main.ports.apibridge.targetPort | default .Values.service.main.ports.apibridge.port }}"
 
 service:
   main:
     ports:
       main:
+        enabled: true
+        primary: true
+        protocol: http
         port: 8095
+        targetPort: 8095
       stream:
         enabled: true
-        port: 8096
-        targetPort: 8096
+        primary: false
+        protocol: http
+        port: 8097
+        targetPort: 8097
+      apibridge:
+        enabled: true
+        port: 3000
+        targetPort: 3000
+        protocol: tcp
+      bonjour:
+        enabled: true
+        port: 5353
+        targetPort: 5353
+        protocol: tcp
+      rtsp:
+        enabled: true
+        port: 554
+        targetPort: 554
+        protocol: tcp
+      chromecast:
+        enabled: true
+        port: 8008
+        targetPort: 8008
         protocol: tcp
 
 securityContext:
