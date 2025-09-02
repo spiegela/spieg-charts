@@ -31,9 +31,6 @@ workload:
             startup:
               type: http
           env:
-            PUID: 568
-            PGID: 568
-            TZ: Americas/Chicago
             DATABASE_URL:
               secretKeyRef:
                 expandObjectName: false
@@ -41,18 +38,21 @@ workload:
                 key: jdbc-mariadb
             DATABASE_USERNAME: "{{ .Values.mariadb.mariadbUsername }}"
             DATABASE_PASSWORD: "{{ .Values.mariadb.password }}"
-            BOOKLORE_PORT: "{{ .Values.service.main.ports.main.targetPort"
+            BOOKLORE_PORT: "{{ .Values.service.main.ports.main.targetPort }}"
             SWAGGER_ENABLED: "true"
 persistence:
   config:
     enabled: true
     mountPath: /app/data
+    readOnly: false
   books:
     enabled: true
     mountPath: /books
-  bookDrop:
+    readOnly: false
+  bookdrop:
     enabled: true
-    mountPath: /bookDrop
+    mountPath: /bookdrop
+    readOnly: false
 
 mariadb:
   enabled: true
