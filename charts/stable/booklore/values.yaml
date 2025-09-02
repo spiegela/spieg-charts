@@ -1,0 +1,60 @@
+image:
+  repository: ghcr.io/booklore-app/booklore
+  pullPolicy: IfNotPresent
+  tag: v1.1.1@sha256:50a21ed8217bbf92cbf5ec259f52535754523d1541ae28cabd5d9ce037d1b453
+
+securityContext:
+  container:
+    readOnlyRootFilesystem: false
+    runAsNonRoot: false
+    runAsUser: 0
+    runAsGroup: 0
+
+service:
+  main:
+    ports:
+      main:
+        protocol: http
+        targetPort: 8080
+        port: 8080
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          probes:
+            liveness:
+              type: http
+            readiness:
+              type: http
+            startup:
+              type: http
+          env:
+            PUID: 568
+            PGID: 568
+            TZ: Americas/Chicago
+            DATABASE_URL:
+              secretKeyRef:
+                expandObjectName: false
+                name: '{{ printf "%s-%s" .Release.Name "mariadbcreds" }}'
+                key: jdbc-mariadb
+            DATABASE_USERNAME: "{{ .Values.mariadb.mariadbUsername }}"
+            DATABASE_PASSWORD: "{{ .Values.mariadb.password }}"
+            BOOKLORE_PORT: "{{ .Values.service.main.ports.main.targetPort"
+            SWAGGER_ENABLED: "true"
+persistence:
+  config:
+    enabled: true
+    mountPath: /app/data
+  books:
+    enabled: true
+    mountPath: /books
+  bookDrop:
+    enabled: true
+    mountPath: /bookDrop
+
+mariadb:
+  enabled: true
+  mariadbUsername: booklore
+  mariadbDatabase: booklore
