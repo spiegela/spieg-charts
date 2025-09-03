@@ -1,7 +1,7 @@
 dependencies:
 - name: common
   repository: oci://tccr.io/truecharts
-  version: 25.4.2
+  version: 28.16.5
 - name: mariadb
   repository: oci://oci.trueforge.org/truecharts
   version: 16.3.2
