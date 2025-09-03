@@ -3,7 +3,7 @@ apiVersion: v2
 name: booklore
 description: BookLore is a self-hosted web app for organizing and managing your personal book collection.
 type: application
-version: 1.0.5
+version: 1.0.6
 appVersion: "1.1.1"
 sources:
   - https://github.com/booklore-app/booklore
@@ -11,3 +11,10 @@ dependencies:
   - name: common
     repository: oci://tccr.io/truecharts
     version: 25.4.2
+  - name: mariadb
+    version: 16.3.2
+    repository: oci://oci.trueforge.org/truecharts
+    condition: mariadb.enabled
+    alias: ""
+    tags: []
+    import-values: []
