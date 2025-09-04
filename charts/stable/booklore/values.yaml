@@ -15,21 +15,31 @@ service:
     ports:
       main:
         protocol: http
-        targetPort: 8080
-        port: 8080
+        targetPort: 6060
+        port: 6060
 
 workload:
   main:
     podSpec:
+      initContainers:
+        init-db:
+          type: install
+          enabled: true
+          imageSelector: "image"
+          command:
+            - /bin/ash
+          args:
+            - -c
+            - mkdir /run/nginx
       containers:
         main:
           probes:
             liveness:
-              type: http
+              type: tcp
             readiness:
-              type: http
+              type: tcp
             startup:
-              type: http
+              type: tcp
           env:
             DATABASE_URL:
               secretKeyRef:
@@ -41,6 +51,11 @@ workload:
             BOOKLORE_PORT: "{{ .Values.service.main.ports.main.targetPort }}"
             SWAGGER_ENABLED: "true"
 persistence:
+  run:
+    enabled: true
+    mountPath: /run
+    readOnly: false
+    type: emptyDir
   config:
     enabled: true
     mountPath: /app/data
@@ -48,6 +63,10 @@ persistence:
   books:
     enabled: true
     mountPath: /books
+    readOnly: false
+  magazines:
+    enabled: true
+    mountPath: /magazines
     readOnly: false
   bookdrop:
     enabled: true

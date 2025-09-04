@@ -3,7 +3,7 @@ apiVersion: v2
 name: booklore
 description: BookLore is a self-hosted web app for organizing and managing your personal book collection.
 type: application
-version: 1.0.6
+version: 1.0.9
 appVersion: "1.1.1"
 sources:
   - https://github.com/booklore-app/booklore
