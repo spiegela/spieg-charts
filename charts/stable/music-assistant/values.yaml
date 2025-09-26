@@ -1,6 +1,6 @@
 image:
   repository: ghcr.io/music-assistant/server
-  tag: beta
+  tag: 2.6
   pullPolicy: Always
 
 apiBridgeImage:
@@ -12,6 +12,14 @@ workload:
   main:
     podSpec:
       containers:
+        main:
+          args:
+            - --data-dir
+            - /data
+            - --cache-dir
+            - /data/.cache
+          env:
+            APPDATA: /data
         apibridge:
           enabled: true
           primary: false

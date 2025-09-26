@@ -5,11 +5,11 @@ description: |-
   A music library manager for your offline and online music sources which can easily stream your favourite music to a
   wide range of supported players and be combined with the power of Home Assistant!
 type: application
-version: 1.0.1
-appVersion: "v1.2"
+version: 1.0.3
+appVersion: "v2.6"
 sources:
   - https://www.music-assistant.io/
 dependencies:
   - name: common
     repository: oci://tccr.io/truecharts
-    version: 25.4.2
+    version: 28.16.5
