@@ -1,0 +1,141 @@
+jellyfin:
+  server:
+  adminUsername:
+  adminPassword:
+
+spotify:
+  clientId:
+  clientSecret:
+  cookie:
+
+lidarr:
+  url:
+  apiKey:
+
+redis:
+  enabled: true
+  redisUsername: default
+
+settings:
+  searchBeforeDownload: true
+  downloadAfterPlaylistAdd: true
+  findBestMatchUseFfprobe: false
+  refreshLibrariesAfterDownloadTask: true
+  lidarrMonitorArtists: false
+  logLevel: INFO
+  spotDlProxy:
+  spotDlOutputFormat:
+
+image:
+  repository: ghcr.io/kamilkosek/jellyplist
+  tag: latest
+  pullPolicy: Always
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          envFrom:
+            - secretRef:
+                name: main
+            - configMapRef:
+                name: main
+          env:
+            SPOTIFY_COOKIE_FILE: /spotify-cookie.txt
+            MUSIC_STORAGE_BASE_PATH: /music
+            SPOTDL_PROXY: '{{ .Values.settings.spotDlProxy | quote }}'
+            SPOTDL_OUTPUT_FORMAT: '{{ .Values.settings.spotDlOutputFormat | default "/{artist}/{artists} - {title}" | quote }}'
+            REDIS_URL:
+              secretKeyRef:
+                name: '{{ .Release.Name }}-rediscreds'
+                expandObjectName: false
+                key: url
+            JELLYPLIST_DB_HOST:
+              secretKeyRef:
+                name: cnpg-main-urls
+                key: host
+            JELLYPLIST_DB_USER:
+              secretKeyRef:
+                name: cnpg-main-user
+                key: username
+            JELLYPLIST_DB_PASSWORD:
+              secretKeyRef:
+                name: cnpg-main-user
+                key: password
+
+configmap:
+  main:
+    enabled: true
+    data:
+      # before attempting to do a download with spotDL , the song will be searched first in the local library
+      # ("true" MAY INCUR PERFORMANCE ISSUES)
+      SEARCH_JELLYFIN_BEFORE_DOWNLOAD: '{{ .Values.settings.searchBeforeDownload | default true | quote }}'
+      START_DOWNLOAD_AFTER_PLAYLIST_ADD: '{{ .Values.settings.downloadAfterPlaylistAdd | default false | quote }}'
+      # {album}, Will be joined with to get a complete path
+      # defaults to false, If a new Playlist is added, the Download Task will be scheduled immediately
+      # Use ffprobe to gather quality details from a file to calculate quality score. Otherwise jellyplist will
+      # use details provided by jellyfin. defaults to false.
+      FIND_BEST_MATCH_USE_FFPROBE: '{{ .Values.settings.findBestMatchUseFfprobe | default false | quote }}'
+      # jellyplist will trigger a music library update on your Jellyfin server, in case you dont have
+      # `Realtime Monitoring` enabled on your Jellyfin library. Defaults to false. ("true" MAY INCURE
+      # PERFORMANCE ISSUES)
+      REFRESH_LIBRARIES_AFTER_DOWNLOAD_TASK: '{{ .Values.settings.refreshLibrariesAfterDownloadTask | default false | quote }}'
+      LOG_LEVEL: '{{ .Values.settings.logLevel | default "INFO" }}'
+      # If false, only the corresponding album will be set to monitored in lidarr, if true the whole artist will
+      # be set as monitored. Be careful in the beginning as you might hammer your lidarr instance and you
+      # indexers. Defaults to false
+      LIDARR_MONITOR_ARTISTS: '{{.Values.settings.lidarrMonitorArtists | default false | quote }}'
+
+secret:
+  cpng-main-urls:
+    enabled: false
+    data:
+      host: ""
+  cookie:
+    enabled: true
+    data:
+      "spotify-cookie.txt": '{{ .Values.spotify.cookie | b64enc }}'
+  main:
+    enabled: true
+    data:
+      SECRET_KEY: '{{ include "secret-key" . }}'
+      JELLYFIN_SERVER_URL: '{{ .Values.jellyfin.server }}'
+      JELLYFIN_ADMIN_USER: '{{ .Values.jellyfin.adminUsername }}'
+      JELLYFIN_ADMIN_PASSWORD: '{{ .Values.jellyfin.adminPassword }}'
+      SPOTIFY_CLIENT_ID: '{{ .Values.spotify.clientId }}'
+      SPOTIFY_CLIENT_SECRET: '{{.Values.spotify.clientSecret }}'
+      LIDARR_API_KEY: '{{ .Values.lidarr.apiKey }}'
+      LIDARR_URL: '{{ .Values.lidarr.url }}'
+
+service:
+  main:
+    ports:
+      main:
+        enabled: true
+        primary: true
+        protocol: http
+        port: 5055
+        targetPort: 5055
+
+persistence:
+  cookie:
+    enabled: true
+    type: secret
+    objectName: cookie
+    expandObjectName: true
+    optional: false
+    defaultMode: "0755"
+    mountPath: /spotify-cookie.txt
+    subPath: spotify-cookie.txt
+
+  data:
+    enabled: true
+    mountPath: /data
+    readOnly: false
+
+cnpg:
+  main:
+    enabled: true
+    user: jellyplist
+    database: jellyplist

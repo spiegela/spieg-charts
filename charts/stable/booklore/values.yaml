@@ -1,7 +1,7 @@
 image:
   repository: ghcr.io/booklore-app/booklore
   pullPolicy: IfNotPresent
-  tag: v1.1.1@sha256:50a21ed8217bbf92cbf5ec259f52535754523d1541ae28cabd5d9ce037d1b453
+  tag: v1.4.1
 
 securityContext:
   container:

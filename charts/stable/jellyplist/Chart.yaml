@@ -1,0 +1,23 @@
+---
+apiVersion: v2
+name: jellyplist
+description: |-
+  Jellyplist aims to be a companion app for your self-hosted Jellyfin Server. With Jellyplist you will be able to
+  replicate/sync playlists from Spotify to your local Jellyfin account. Under the hood, it uses SpotDL for downloading
+  the corresponding tracks from the available sources if a track isn´t found in your local library.
+type: application
+version: 1.0.5
+appVersion: "v1.1.10"
+sources:
+  - https://www.jellyplist.io/
+dependencies:
+  - name: common
+    repository: oci://tccr.io/truecharts
+    version: 28.23.0
+  - name: redis
+    version: 17.9.1
+    repository: oci://oci.trueforge.org/truecharts
+    condition: redis.enabled
+    alias: ""
+    tags: [ ]
+    import-values: [ ]
