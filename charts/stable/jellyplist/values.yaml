@@ -14,7 +14,6 @@ lidarr:
 
 redis:
   enabled: true
-  redisUsername: default
 
 settings:
   searchBeforeDownload: true
@@ -128,10 +127,9 @@ persistence:
     defaultMode: "0755"
     mountPath: /spotify-cookie.txt
     subPath: spotify-cookie.txt
-
   data:
     enabled: true
-    mountPath: /data
+    mountPath: /.spotdl
     readOnly: false
 
 cnpg:
