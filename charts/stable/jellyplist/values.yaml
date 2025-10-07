@@ -131,6 +131,8 @@ persistence:
     enabled: true
     mountPath: /.spotdl
     readOnly: false
+  varlogs:
+    mountPath: /var/log
 
 cnpg:
   main:
