@@ -1,0 +1,21 @@
+---
+apiVersion: v2
+name: huntarr
+description: |-
+  Huntarr started as a simple bash script to solve a real problem: *arr apps don't actively search for missing content
+  in your existing library. What you see today evolved from that need, with input from users who discovered they had
+  significant gaps they didn't even know existed. The best validation? My wife finally cancelled our streaming
+  subscriptions because our setup actually works.
+type: application
+version: 1.0.1
+appVersion: "8.2.10"
+sources:
+  - https://plexguide.github.io/Huntarr.io
+dependencies:
+  - name: common
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []

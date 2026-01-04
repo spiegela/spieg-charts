@@ -1,0 +1,232 @@
+image:
+  repository: ghcr.io/sbcrumb/remediarr
+  pullPolicy: IfNotPresent
+  tag: "v0.2.1"
+
+config:
+  # Logging verbosity: DEBUG, INFO, WARNING, ERROR
+  # DEBUG: Shows detailed processing info (useful for troubleshooting)
+  # INFO: Standard operational messages (recommended)
+  # WARNING: Only warnings and errors
+  # ERROR: Only errors
+  logLevel: INFO
+
+  # ====== WEBHOOK SECURITY (Optional) ======
+  # Enable webhook signature verification for enhanced security
+  # If set, Jellyseerr must send X-Jellyseerr-Signature header with HMAC-SHA256
+  # Generate with: openssl rand -hex 32
+  # Leave empty to disable signature verification
+  webhookSharedSecret: ""
+
+  # ====== SONARR INTEGRATION ======
+  sonarr:
+    # Sonarr base URL (include http:// or https://)
+    # Use container name if running in Docker: http://sonarr:8989
+    # Use localhost if running locally: http://localhost:8989
+    url: http://sonarr:8989
+    # Sonarr API key from Settings > General > Security
+    # Required for: finding TV shows, deleting episode files, triggering searches
+    apiKey:
+    # HTTP timeout for Sonarr API calls in seconds
+    # Increase if you have a slow Sonarr instance or large library
+    timeout: 60
+
+  # ====== RADARR INTEGRATION ======
+  radarr:
+    # Radarr base URL (include http:// or https://)
+    # Use container name if running in Docker: http://radarr:7878
+    # Use localhost if running locally: http://localhost:7878
+    url: http://radarr:7878
+    # Radarr API key from Settings > General > Security
+    # Required for: finding movies, deleting movie files, triggering searches
+    apiKey:
+    # HTTP timeout for Radarr API calls in seconds
+    # Increase if you have a slow Radarr instance or large library
+    timeout: 60
+
+  # ====== JELLYSEERR INTEGRATION ======
+  jellyseerr:
+    # Jellyseerr base URL (include http:// or https://)
+    # Use container name if running in Docker: http://jellyseerr:5055
+    # Use localhost if running locally: http://localhost:5055
+    url:
+    # Jellyseerr API key from Settings > General > API Key
+    # Required for: fetching issue details, posting comments, closing issues
+    apiKey:
+    # Automatically close issues after successful remediation
+    # true: Close issues after fixing and posting success comment (recommended)
+    # false: Only post comment, leave issue open for manual closure
+    autoClose: true
+    # Post comments when actions are taken
+    # true: Post comments explaining what was done (recommended)
+    # false: Take actions silently without commenting
+    autoComment: true
+
+  # ====== BAZARR INTEGRATION (OPTIONAL) ======
+  # Subtitle management integration with Bazarr
+  # Leave empty to disable Bazarr integration (default behavior)
+  bazarr:
+    # Bazarr base URL - adjust port if needed (default: 6767)
+    # Use localhost if running locally: http://localhost:6767
+    url:
+    # Bazarr API key from Settings > General > Security > API Key
+    # Required for: subtitle search, download, and management
+    apiKey:
+    # HTTP timeout for Bazarr API calls (seconds)
+    timeout: 60
+    # Bazarr subtitle language priority (comma-separated language codes)
+    # Controls which language subtitles Bazarr will search for first
+    # Use ISO 639-1 codes: en, es, fr, de, it, pt, etc.
+    languages: en
+    # Force subtitle re-download even if subtitles exist
+    # true: Always delete existing subtitles before searching for new ones
+    # false: Only search for missing subtitles (default)
+    forceDownload: true
+
+
+  # ====== KEYWORD CONFIGURATION ======
+  # Customize which keywords trigger each action type
+  # Keywords are case-insensitive and matched as substrings
+  # Use comma-separated lists, no quotes needed
+  keyword:
+    # TV Show - Audio Issues
+    # Triggers: Delete episode file + re-download
+    tv:
+      audio: no audio,no sound,missing audio,audio issue,wrong language,not in english,audio missing,sound missing
+      # TV Show - Video Issues
+      # Triggers: Delete episode file + re-download
+      video: no video,video glitch,black screen,stutter,pixelation,video missing,broken video,video issue
+      # TV Show - Subtitle Issues
+      # Triggers: Bazarr subtitle search (if configured), otherwise delete episode file + re-download
+      subtitle: missing subs,no subtitles,bad subtitles,wrong subs,subs out of sync,subtitle issue,no captions,need subtitles,subtitle problems,subs missing,captions missing,no srt,subtitle not working
+      # TV Show - Other Issues
+      # Triggers: Delete episode file + re-download
+      other: buffering,playback error,corrupt file,file corrupted,won''t play,freezing
+
+    movie:
+      # Movie - Audio Issues
+      # Triggers: Delete movie files + new search
+      audio: no audio,no sound,audio issue,wrong language,not in english,audio missing,sound missing
+      # Movie - Video Issues
+      # Triggers: Delete movie files + new search
+      video: no video,video missing,bad video,broken video,black screen,video issue,pixelated
+      # Movie - Subtitle Issues
+      # Triggers: Bazarr subtitle search (if configured), otherwise delete movie files + new search
+      subtitle: missing subs,no subtitles,bad subtitles,wrong subs,subs out of sync,subtitle issue,no captions,need subtitles,subtitle problems,subs missing,captions missing,no srt,subtitle not working
+      # Movie - Other Issues (buffering, corruption, etc.)
+      # Triggers: Delete movie files + new search
+      other: buffering,playback error,corrupt file,file corrupted,won''t play,freezing
+      # Movie - Wrong Movie Downloaded
+      # Triggers: Delete movie files + new search (with optional digital release check)
+      wrong: wrong movie,incorrect movie,not the right movie,this is not,different movie
+
+  # ====== BEHAVIOR SETTINGS ======
+  system:
+    # Prevent repeat actions on the same issue for this many seconds
+    # Protects against webhook loops and spam
+    # 90 seconds is usually sufficient for most operations to complete
+    cooldown: 90
+
+    # Optional: Only search for new movies if they have a digital release
+    # Requires TMDB_API_KEY to check release dates
+    # true: Skip search if movie hasn't been digitally released yet
+    # false: Always search regardless of release status
+    onlyDigitalRelease: false
+
+  # TMDB API key for digital release checking (optional)
+  # Get free API key from: https://www.themoviedb.org/settings/api
+  # Only needed if SEARCH_ONLY_IF_DIGITAL_RELEASE=true
+  tmdb:
+    apiKey:
+
+  # ====== NOTIFICATION SETTINGS ======
+  # Send notifications when actions are taken (optional)
+  notification:
+
+    # Gotify Push Notifications
+    # Self-hosted notification server: https://gotify.net/
+    gotify:
+      url:
+      token:
+      # Priority level 1-10 (higher = more urgent, triggers different sounds/alerts)
+      priority: 5
+
+    # Apprise Notifications (Discord, Slack, Telegram, Email, etc.)
+    # Supports 80+ notification services: https://github.com/caronc/apprise
+    # Multiple URLs separated by commas
+    # Examples:
+    #   Discord: discord://webhook_id/webhook_token
+    #   Slack: slack://TokenA/TokenB/TokenC/Channel
+    #   Telegram: tgram://bottoken/ChatID
+    #   Email: mailto://user:pass@smtp.server.com?to=recipient@domain.com
+    appriseUrls: []
+
+  # ====== CUSTOM MESSAGES ======
+  # Customize the messages Remediarr posts (optional)
+  # All messages are automatically prefixed with "[Remediarr]"
+  # Available placeholders: {title} {season} {episode} {deleted}
+  messages:
+    # Success message for movies after file replacement and new download
+    movieSuccess: |-
+      {title}: replaced file; new download grabbed. Closing this issue. If anything''s still off, comment and I''ll take another pass.
+    # Success message for TV episodes after file replacement and new download
+    tvSuccess: |-
+      {title} S{season:02d}E{episode:02d}: replaced file; new download grabbed. Closing this issue. If anything''s still off, comment and I''ll take another pass.
+    # Message when action completed but issue couldn't be auto-closed
+    autoCloseFail: |-
+      Action completed but I couldn''t auto-close this issue. Please close it once you verify it''s fixed.
+
+service:
+  main:
+    ports:
+      main:
+        protocol: http
+        targetPort: 8189
+        port: 8189
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          envFrom:
+            - secretRef:
+                name: main
+
+secret:
+  main:
+    enabled: true
+    data:
+      LOG_LEVEL: '{{ .Values.config.logLevel | required "config.logLevel required" }}'
+      WEBHOOK_SHARED_SECRET: '{{ .Values.config.webhookSharedSecret }}'
+      SONARR_URL: '{{ .Values.config.sonarr.url }}'
+      SONARR_API_KEY: '{{ .Values.config.sonarr.apiKey }}'
+      SONARR_HTTP_TIMEOUT: '{{ .Values.config.sonarr.timeout }}'
+      JELLYSEERR_URL: '{{ .Values.config.jellyseerr.url }}'
+      JELLYSEERR_API_KEY: '{{ .Values.config.jellyseerr.apiKey }}'
+      JELLYSEERR_CLOSE_ISSUES:  '{{ .Values.config.jellyseerr.autoClose | quote }}'
+      JELLYSEERR_COMMENT_ON_ACTION: '{{ .Values.config.jellyseerr.autoComment | quote }}'
+      BAZARR_URL: '{{ .Values.config.bazarr.url }}'
+      BAZARR_API_KEY: '{{ .Values.config.bazarr.apiKey }}'
+      BAZARR_HTTP_TIMEOUT: '{{ .Values.config.bazarr.timeout }}'
+      BAZARR_SUBTITLE_LANGUAGES: '{{ .Values.config.bazarr.languages }}'
+      BAZARR_FORCE_REDOWNLOAD: '{{ .Values.config.bazarr.forceDownload }}'
+      TV_AUDIO_KEYWORDS: '{{ .Values.config.keyword.tv.audio }}'
+      TV_VIDEO_KEYWORDS: '{{ .Values.config.keyword.tv.video }}'
+      TV_SUBTITLE_KEYWORDS: '{{ .Values.config.keyword.tv.subtitle }}'
+      TV_OTHER_KEYWORDS: '{{ .Values.config.keyword.tv.other | quote }}'
+      MOVIE_AUDIO_KEYWORDS: '{{ .Values.config.keyword.movie.audio }}'
+      MOVIE_VIDEO_KEYWORDS: '{{ .Values.config.keyword.movie.video }}'
+      MOVIE_SUBTITLE_KEYWORDS: '{{ .Values.config.keyword.movie.subtitle }}'
+      MOVIE_OTHER_KEYWORDS: '{{ .Values.config.keyword.movie.other }}'
+      MOVIE_WRONG_KEYWORDS: '{{ .Values.config.keyword.movie.wrong }}'
+      REMEDIARR_ISSUE_COOLDOWN_SEC: '{{ .Values.config.system.cooldown }}'
+      SEARCH_ONLY_IF_DIGITAL_RELEASE: '{{ .Values.config.system.onlyDigitalRelease }}'
+      TMDB_API_KEY: '{{ .Values.config.tmdb.apiKey }}'
+      GOTIFY_URL: '{{ .Values.config.notification.gotify.url }}'
+      GOTIFY_TOKEN: '{{ .Values.config.notification.gotify.token }}'
+      GOTIFY_PRIORITY: '{{ .Values.config.notification.gotify.priority }}'
+      APPRISE_URLS: '{{ .Values.config.notification.appriseUrls | join "," }}'
+      MSG_MOVIE_SUCCESS: '{{ .Values.config.messages.movieSuccess }}'
+      MSG_TV_SUCCESS: '{{ .Values.config.messages.tvSuccess }}'
+      MSG_AUTOCLOSE_FAIL: '{{ .Values.config.messages.autoCloseFail }}'

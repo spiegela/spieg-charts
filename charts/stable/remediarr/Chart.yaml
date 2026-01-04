@@ -1,0 +1,20 @@
+---
+apiVersion: v2
+name: remediarr
+description: |-
+  Remediarr is a lightweight webhook service that automatically fixes common media issues reported through Jellyseerr.
+  When users report problems like "no audio" or "wrong movie", Remediarr detects the keywords, deletes problematic
+  files, triggers new downloads, and closes the issue—all without manual intervention.
+type: application
+version: 1.0.6
+appVersion: "0.2.1"
+sources:
+  - https://github.com/sbcrumb/remediarr/
+dependencies:
+  - name: common
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []
