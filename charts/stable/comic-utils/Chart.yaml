@@ -9,5 +9,9 @@ sources:
   - https://github.com/allaboutduncan/comic-utils
 dependencies:
   - name: common
-    repository: oci://tccr.io/truecharts
-    version: 25.4.2
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []
