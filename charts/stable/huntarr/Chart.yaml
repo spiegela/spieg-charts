@@ -7,8 +7,8 @@ description: |-
   significant gaps they didn't even know existed. The best validation? My wife finally cancelled our streaming
   subscriptions because our setup actually works.
 type: application
-version: 1.0.1
-appVersion: "8.2.10"
+version: 1.0.2
+appVersion: "9.1.12"
 sources:
   - https://plexguide.github.io/Huntarr.io
 dependencies:
