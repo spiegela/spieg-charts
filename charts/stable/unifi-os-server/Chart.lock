@@ -1,0 +1,4 @@
+dependencies:
+- name: common
+  repository: oci://tccr.io/truecharts
+  version: 28.16.5
