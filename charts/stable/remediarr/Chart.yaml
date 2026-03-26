@@ -6,7 +6,7 @@ description: |-
   When users report problems like "no audio" or "wrong movie", Remediarr detects the keywords, deletes problematic
   files, triggers new downloads, and closes the issue—all without manual intervention.
 type: application
-version: 1.0.6
+version: 1.0.7
 appVersion: "0.2.1"
 sources:
   - https://github.com/sbcrumb/remediarr/

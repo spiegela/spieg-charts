@@ -1,7 +1,7 @@
 image:
   repository: ghcr.io/sbcrumb/remediarr
   pullPolicy: IfNotPresent
-  tag: "v0.2.1"
+  tag: "v0.2.2"
 
 config:
   # Logging verbosity: DEBUG, INFO, WARNING, ERROR
@@ -27,9 +27,6 @@ config:
     # Sonarr API key from Settings > General > Security
     # Required for: finding TV shows, deleting episode files, triggering searches
     apiKey:
-    # HTTP timeout for Sonarr API calls in seconds
-    # Increase if you have a slow Sonarr instance or large library
-    timeout: 60
 
   # ====== RADARR INTEGRATION ======
   radarr:
@@ -40,9 +37,6 @@ config:
     # Radarr API key from Settings > General > Security
     # Required for: finding movies, deleting movie files, triggering searches
     apiKey:
-    # HTTP timeout for Radarr API calls in seconds
-    # Increase if you have a slow Radarr instance or large library
-    timeout: 60
 
   # ====== JELLYSEERR INTEGRATION ======
   jellyseerr:
@@ -72,8 +66,6 @@ config:
     # Bazarr API key from Settings > General > Security > API Key
     # Required for: subtitle search, download, and management
     apiKey:
-    # HTTP timeout for Bazarr API calls (seconds)
-    timeout: 60
     # Bazarr subtitle language priority (comma-separated language codes)
     # Controls which language subtitles Bazarr will search for first
     # Use ISO 639-1 codes: en, es, fr, de, it, pt, etc.
@@ -148,8 +140,6 @@ config:
     gotify:
       url:
       token:
-      # Priority level 1-10 (higher = more urgent, triggers different sounds/alerts)
-      priority: 5
 
     # Apprise Notifications (Discord, Slack, Telegram, Email, etc.)
     # Supports 80+ notification services: https://github.com/caronc/apprise
@@ -197,35 +187,32 @@ secret:
   main:
     enabled: true
     data:
-      LOG_LEVEL: '{{ .Values.config.logLevel | required "config.logLevel required" }}'
       WEBHOOK_SHARED_SECRET: '{{ .Values.config.webhookSharedSecret }}'
       SONARR_URL: '{{ .Values.config.sonarr.url }}'
       SONARR_API_KEY: '{{ .Values.config.sonarr.apiKey }}'
-      SONARR_HTTP_TIMEOUT: '{{ .Values.config.sonarr.timeout }}'
+      RADARR_URL: '{{ .Values.config.sonarr.url }}'
+      RADARR_API_KEY: '{{ .Values.config.sonarr.apiKey }}'
       JELLYSEERR_URL: '{{ .Values.config.jellyseerr.url }}'
       JELLYSEERR_API_KEY: '{{ .Values.config.jellyseerr.apiKey }}'
-      JELLYSEERR_CLOSE_ISSUES:  '{{ .Values.config.jellyseerr.autoClose | quote }}'
-      JELLYSEERR_COMMENT_ON_ACTION: '{{ .Values.config.jellyseerr.autoComment | quote }}'
+      JELLYSEERR_CLOSE_ISSUES:  '{{ .Values.config.jellyseerr.autoClose }}'
+      JELLYSEERR_COMMENT_ON_ACTION: '{{ .Values.config.jellyseerr.autoComment }}'
       BAZARR_URL: '{{ .Values.config.bazarr.url }}'
       BAZARR_API_KEY: '{{ .Values.config.bazarr.apiKey }}'
-      BAZARR_HTTP_TIMEOUT: '{{ .Values.config.bazarr.timeout }}'
       BAZARR_SUBTITLE_LANGUAGES: '{{ .Values.config.bazarr.languages }}'
       BAZARR_FORCE_REDOWNLOAD: '{{ .Values.config.bazarr.forceDownload }}'
       TV_AUDIO_KEYWORDS: '{{ .Values.config.keyword.tv.audio }}'
       TV_VIDEO_KEYWORDS: '{{ .Values.config.keyword.tv.video }}'
       TV_SUBTITLE_KEYWORDS: '{{ .Values.config.keyword.tv.subtitle }}'
-      TV_OTHER_KEYWORDS: '{{ .Values.config.keyword.tv.other | quote }}'
+      TV_OTHER_KEYWORDS: '{{ .Values.config.keyword.tv.other }}'
       MOVIE_AUDIO_KEYWORDS: '{{ .Values.config.keyword.movie.audio }}'
       MOVIE_VIDEO_KEYWORDS: '{{ .Values.config.keyword.movie.video }}'
       MOVIE_SUBTITLE_KEYWORDS: '{{ .Values.config.keyword.movie.subtitle }}'
       MOVIE_OTHER_KEYWORDS: '{{ .Values.config.keyword.movie.other }}'
       MOVIE_WRONG_KEYWORDS: '{{ .Values.config.keyword.movie.wrong }}'
-      REMEDIARR_ISSUE_COOLDOWN_SEC: '{{ .Values.config.system.cooldown }}'
       SEARCH_ONLY_IF_DIGITAL_RELEASE: '{{ .Values.config.system.onlyDigitalRelease }}'
       TMDB_API_KEY: '{{ .Values.config.tmdb.apiKey }}'
       GOTIFY_URL: '{{ .Values.config.notification.gotify.url }}'
       GOTIFY_TOKEN: '{{ .Values.config.notification.gotify.token }}'
-      GOTIFY_PRIORITY: '{{ .Values.config.notification.gotify.priority }}'
       APPRISE_URLS: '{{ .Values.config.notification.appriseUrls | join "," }}'
       MSG_MOVIE_SUCCESS: '{{ .Values.config.messages.movieSuccess }}'
       MSG_TV_SUCCESS: '{{ .Values.config.messages.tvSuccess }}'
