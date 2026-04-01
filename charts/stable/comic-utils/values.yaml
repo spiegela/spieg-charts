@@ -1,6 +1,6 @@
 image:
-  repository: allaboutduncan/comic-utils-web
-  tag: latest
+  repository: spiegela/comic-utils
+  tag: v4.12.1
   pullPolicy: Always
 
 service:
@@ -14,3 +14,15 @@ persistence:
     enabled: true
     mountPath: /data
     readOnly: false
+  config:
+    enabled: true
+    mountPath: /config
+  downloads:
+    enabled: true
+    mountPath: /downloads"
+  cache:
+    enabled: true
+    mountPath: /cache
+  logs:
+    enabled: true
+    mountPath: /app/logs
