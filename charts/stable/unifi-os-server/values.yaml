@@ -11,58 +11,72 @@ service:
   main:
     ports:
       main:
+        enabled: true
         protocol: https
         targetPort: 443
         port: 443
       rtp:
+        enabled: true
         protocol: tcp
         targetPort: 5005
         port: 5005
       id-hub:
+        enabled: true
         protocol: http
         targetPort: 9543
         port: 9543
       speedtest:
+        enabled: true
         protocol: http
         port: 6789
         targetPort: 6789
       communication:
+        enabled: true
         protocol: http
         port: 8080
         targetPort: 8080
       network-app:
+        enabled: true
         protocol: https
         port: 8443
         targetPort: 8443
-      hotspot-secured:
+      hotspot-sec:
+        enabled: true
         protocol: http
         port: 8444
         targetPort: 8444
       stun:
+        enabled: true
         protocol: udp
         port: 3478
         targetPort: 3478
       syslog:
+        enabled: true
         protocol: udp
         port: 5514
         targetPort: 5514
       discovery:
+        enabled: true
         protocol: udp
         port: 10003
         targetPort: 10003
       supervisor:
+        enabled: true
         protocol: tcp
         port: 11084
         targetPort: 11084
       aqmps:
+        enabled: true
         protocol: tcp
         port: 5671
         targetPort: 5671
-      hotspot-redirect:
+      hotspot-rdir:
+        enabled: true
         protocol: http
         port: 8880
         targetPort: 8880
-      hotspot-redirect-2:
+      hotspot-rdir-2:
+        enabled: true
         protocol: http
         port: 8882
         targetPort: 8882
@@ -86,7 +100,8 @@ workload:
               path: /api/ping
               port: 80
           env:
-            UOS_SYSTEM_IP: "{{ .Values.unifi.systemIp | required 'unifi.systemIp is required' }}"
+            UOS_SYSTEM_IP: |-
+              {{ .Values.unifi.systemIp | required "unifi.systemIp is required" }}
 persistence:
   data:
     mountPath: /data
