@@ -6,6 +6,15 @@ image:
 securityContext:
   main:
     privileged: true
+  container:
+    runAsUser: 0
+    runAsGroup: 0
+    readOnlyRootFilesystem: false
+    allowPrivilegeEscalation: true
+    privileged: true
+    PUID: 0
+  pod:
+    fsGroup: 0
 
 service:
   main:
