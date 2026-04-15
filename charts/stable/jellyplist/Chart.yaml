@@ -6,14 +6,18 @@ description: |-
   replicate/sync playlists from Spotify to your local Jellyfin account. Under the hood, it uses SpotDL for downloading
   the corresponding tracks from the available sources if a track isn´t found in your local library.
 type: application
-version: 1.0.8
+version: 1.0.9
 appVersion: "v1.1.10"
 sources:
   - https://www.jellyplist.io/
 dependencies:
   - name: common
-    repository: oci://tccr.io/truecharts
-    version: 28.23.0
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []
   - name: redis
     version: 17.9.1
     repository: oci://oci.trueforge.org/truecharts

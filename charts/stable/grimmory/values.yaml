@@ -1,7 +1,7 @@
 image:
-  repository: ghcr.io/booklore-app/booklore
+  repository: ghcr.io/grimmory-tools/grimmory
   pullPolicy: IfNotPresent
-  tag: v1.4.1
+  tag: v2.3.0
 
 securityContext:
   container:
@@ -48,8 +48,9 @@ workload:
                 key: jdbc-mariadb
             DATABASE_USERNAME: "{{ .Values.mariadb.mariadbUsername }}"
             DATABASE_PASSWORD: "{{ .Values.mariadb.password }}"
-            BOOKLORE_PORT: "{{ .Values.service.main.ports.main.targetPort }}"
-            SWAGGER_ENABLED: "true"
+            GRIMMORY_PORT: "{{ .Values.service.main.ports.main.targetPort }}"
+            API_DOCS_ENABLED: "true"
+            DISK_TYPE: "LOCAL"
 persistence:
   run:
     enabled: true

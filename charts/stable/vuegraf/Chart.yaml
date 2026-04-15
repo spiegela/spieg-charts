@@ -2,8 +2,12 @@ apiVersion: v2
 appVersion: "3.0.10.156"
 dependencies:
   - name: common
-    repository: oci://tccr.io/truecharts
-    version: 25.4.2
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []
 deprecated: false
 home: https://github.com/jertel/vuegraf
 icon: https://avatars.githubusercontent.com/u/106610688

@@ -1,7 +1,7 @@
 image:
   repository: felddy/foundryvtt
   pullPolicy: IfNotPresent
-  tag: "13"
+  tag: "14"
 
 securityContext:
   container:

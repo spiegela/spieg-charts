@@ -3,11 +3,15 @@ apiVersion: v2
 name: ddb-proxy
 description: This proxy allows for communication with DDB for use integrating content into Foundry VTT.
 type: application
-version: 1.0.0
+version: 1.0.1
 appVersion: "v0.0.18"
 sources:
   - https://github.com/MrPrimate/ddb-proxy
 dependencies:
   - name: common
-    repository: oci://tccr.io/truecharts
-    version: 25.4.2
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []

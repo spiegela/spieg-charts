@@ -11,5 +11,9 @@ sources:
   - https://www.music-assistant.io/
 dependencies:
   - name: common
-    repository: oci://tccr.io/truecharts
-    version: 28.16.5
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []
