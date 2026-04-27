@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: spiegela/grovekc
-  tag: v0.0.1
+  tag: v0.0.2
   pullPolicy: IfNotPresent
 
 nameOverride: ""
