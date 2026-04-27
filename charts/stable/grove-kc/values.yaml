@@ -1,0 +1,49 @@
+replicaCount: 1
+
+image:
+  repository: spiegela/grovekc
+  tag: v0.0.1
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+containerPort: 8080
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: grove-kc.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+env:
+  CONTACT_FROM_EMAIL: "contact@grovekcmo.com"
+  CONTACT_TO_EMAIL: ""
+  CONTACT_FROM_NAME: "The Grove KC Website"
+
+secretEnv:
+  SENDGRID_API_KEY: ""
+  CLOUDFLARE_ACCOUNT_ID: ""
+  CLOUDFLARE_API_TOKEN: ""
+
+existingSecret: ""
+
+podAnnotations: {}
+podLabels: {}
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
