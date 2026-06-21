@@ -31,3 +31,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- define "grove-kc.secretName" -}}
 {{- printf "%s-env" (include "grove-kc.fullname" .) -}}
 {{- end -}}
+
+{{- define "grove-kc.galleryManifestConfigMapName" -}}
+{{- printf "%s-gallery-manifest" (include "grove-kc.fullname" .) -}}
+{{- end -}}

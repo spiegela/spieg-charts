@@ -32,11 +32,19 @@ spec:
           env:
             - name: PORT
               value: {{ .Values.containerPort | quote }}
+            {{- if and .Values.galleryManifestConfigMap.enabled .Values.galleryManifestConfigMap.mountPath }}
+            - name: GALLERY_MANIFEST_PATH
+              value: {{ .Values.galleryManifestConfigMap.mountPath | quote }}
+            {{- end }}
+            {{- if and .Values.galleryVolume.enabled .Values.galleryVolume.mediaPath }}
+            - name: GALLERY_MEDIA_PATH
+              value: {{ .Values.galleryVolume.mediaPath | quote }}
+            {{- end }}
             {{- range $name, $value := .Values.env }}
             - name: {{ $name }}
               value: {{ $value | quote }}
             {{- end }}
-          {{- if or .Values.existingSecret .Values.secretEnv.SENDGRID_API_KEY .Values.secretEnv.CLOUDFLARE_ACCOUNT_ID .Values.secretEnv.CLOUDFLARE_API_TOKEN }}
+          {{- if or .Values.existingSecret .Values.secretEnv.CLOUDFLARE_ACCOUNT_ID .Values.secretEnv.CLOUDFLARE_API_TOKEN }}
           envFrom:
             - secretRef:
                 name: {{ default (include "grove-kc.secretName" .) .Values.existingSecret }}
@@ -53,6 +61,45 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          {{- if .Values.galleryVolume.enabled }}
+          volumeMounts:
+            - name: gallery-volume
+              mountPath: {{ .Values.galleryVolume.mountPath | quote }}
+              readOnly: true
+            {{- if .Values.galleryManifestConfigMap.enabled }}
+            - name: gallery-manifest-config
+              mountPath: {{ .Values.galleryManifestConfigMap.mountPath | quote }}
+              subPath: gallery-manifest.json
+              readOnly: true
+            {{- end }}
+          {{- else if .Values.galleryManifestConfigMap.enabled }}
+          volumeMounts:
+            - name: gallery-manifest-config
+              mountPath: {{ .Values.galleryManifestConfigMap.mountPath | quote }}
+              subPath: gallery-manifest.json
+              readOnly: true
+          {{- end }}
+      {{- if or .Values.galleryVolume.enabled .Values.galleryManifestConfigMap.enabled }}
+      volumes:
+        {{- if .Values.galleryVolume.enabled }}
+        - name: gallery-volume
+          {{- if .Values.galleryVolume.existingClaim }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.galleryVolume.existingClaim | quote }}
+          {{- else if .Values.galleryVolume.hostPath }}
+          hostPath:
+            path: {{ .Values.galleryVolume.hostPath | quote }}
+            type: {{ .Values.galleryVolume.hostPathType | quote }}
+          {{- else }}
+          {{- fail "galleryVolume.enabled requires either galleryVolume.existingClaim or galleryVolume.hostPath" }}
+          {{- end }}
+        {{- end }}
+        {{- if .Values.galleryManifestConfigMap.enabled }}
+        - name: gallery-manifest-config
+          configMap:
+            name: {{ default (include "grove-kc.galleryManifestConfigMapName" .) .Values.galleryManifestConfigMap.existingConfigMap }}
+        {{- end }}
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

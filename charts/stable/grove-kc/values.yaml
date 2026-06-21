@@ -1,8 +1,8 @@
 replicaCount: 1
 
 image:
-  repository: spiegela/grovekc
-  tag: v0.0.2
+  repository: grove-kc
+  tag: latest
   pullPolicy: IfNotPresent
 
 nameOverride: ""
@@ -29,9 +29,12 @@ env:
   CONTACT_FROM_EMAIL: "contact@grovekcmo.com"
   CONTACT_TO_EMAIL: ""
   CONTACT_FROM_NAME: "The Grove KC Website"
+  CONTACT_LOG_PATH: "/tmp/grove-contact-messages.jsonl"
+  CLIENT_PORTAL_URL: ""
+  GALLERY_MANIFEST_URL: ""
+  GALLERY_IMAGE_BASE_URL: ""
 
 secretEnv:
-  SENDGRID_API_KEY: ""
   CLOUDFLARE_ACCOUNT_ID: ""
   CLOUDFLARE_API_TOKEN: ""
 
@@ -41,6 +44,20 @@ podAnnotations: {}
 podLabels: {}
 
 resources: {}
+
+galleryVolume:
+  enabled: false
+  existingClaim: ""
+  hostPath: ""
+  hostPathType: Directory
+  mountPath: "/data/gallery"
+  mediaPath: "/data/gallery"
+
+galleryManifestConfigMap:
+  enabled: false
+  existingConfigMap: ""
+  mountPath: "/config/gallery-manifest.json"
+  items: []
 
 nodeSelector: {}
 

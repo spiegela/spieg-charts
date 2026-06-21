@@ -1,0 +1,13 @@
+{{- if and .Values.galleryManifestConfigMap.enabled (not .Values.galleryManifestConfigMap.existingConfigMap) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "grove-kc.galleryManifestConfigMapName" . }}
+  labels:
+    {{- include "grove-kc.labels" . | nindent 4 }}
+data:
+  gallery-manifest.json: |
+    {
+      "items": {{ .Values.galleryManifestConfigMap.items | toPrettyJson | nindent 6 | trim }}
+    }
+{{- end }}
