@@ -1,0 +1,36 @@
+image:
+  repository: ghcr.io/danielalves96/zublo
+  tag: latest
+  pullPolicy: Always
+
+config:
+  pbEncryptionKey: ""
+
+service:
+  main:
+    ports:
+      main:
+        protocol: http
+        targetPort: 9597
+        port: 9597
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          envFrom:
+            - secretRef:
+                name: main
+
+secret:
+  main:
+    enabled: true
+    data:
+      PB_ENCRYPTION_KEY: '{{ include "zublo.pbEncryptionKey" . }}'
+
+persistence:
+  data:
+    enabled: true
+    mountPath: /pb/pb_data
+    readOnly: false

@@ -1,0 +1,17 @@
+---
+apiVersion: v2
+name: shelfarr
+description: Shelfarr is a self-hosted ebook and audiobook management system.
+type: application
+version: 1.0.0
+appVersion: "latest"
+sources:
+  - https://github.com/Pedro-Revez-Silva/shelfarr
+dependencies:
+  - name: common
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []

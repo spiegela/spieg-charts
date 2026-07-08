@@ -1,0 +1,41 @@
+image:
+  repository: ghcr.io/jeffvli/feishin
+  tag: latest
+  pullPolicy: Always
+
+config:
+  server:
+    name: jellyfin
+    lock: false
+    type: jellyfin
+    url: ""
+    remoteUrl: ""
+    legacyAuthentication: false
+  plex:
+    enabled: false
+    note: Plex support requires a Plex-capable Feishin image, such as a locally built image from the lux032/feishin fork.
+  analyticsDisabled: true
+  publicPath: ""
+
+service:
+  main:
+    ports:
+      main:
+        protocol: http
+        targetPort: 9180
+        port: 9180
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          env:
+            SERVER_NAME: '{{ .Values.config.server.name }}'
+            SERVER_LOCK: '{{ .Values.config.server.lock }}'
+            SERVER_TYPE: '{{ .Values.config.server.type }}'
+            SERVER_URL: '{{ .Values.config.server.url }}'
+            REMOTE_URL: '{{ .Values.config.server.remoteUrl }}'
+            LEGACY_AUTHENTICATION: '{{ .Values.config.server.legacyAuthentication }}'
+            ANALYTICS_DISABLED: '{{ .Values.config.analyticsDisabled }}'
+            PUBLIC_PATH: '{{ .Values.config.publicPath }}'

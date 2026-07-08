@@ -1,0 +1,18 @@
+---
+apiVersion: v2
+name: feishin
+description: Feishin is a modern self-hosted music player for Jellyfin, Navidrome, and Subsonic-compatible servers.
+type: application
+version: 1.0.0
+appVersion: "latest"
+sources:
+  - https://github.com/jeffvli/feishin
+  - https://github.com/lux032/feishin
+dependencies:
+  - name: common
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []

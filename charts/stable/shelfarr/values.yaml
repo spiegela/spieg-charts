@@ -1,0 +1,63 @@
+image:
+  repository: ghcr.io/pedro-revez-silva/shelfarr
+  tag: latest
+  pullPolicy: Always
+
+config:
+  puid: 568
+  pgid: 568
+  httpPort: 80
+  railsMasterKey: ""
+
+service:
+  main:
+    ports:
+      main:
+        protocol: http
+        targetPort: 80
+        port: 5056
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          probes:
+            liveness:
+              path: /up
+            readiness:
+              path: /up
+            startup:
+              path: /up
+          env:
+            SOLID_QUEUE_IN_PUMA: "1"
+            HTTP_PORT: "{{ .Values.config.httpPort }}"
+            PUID: '{{ .Values.config.puid }}'
+            PGID: '{{ .Values.config.pgid }}'
+          envFrom:
+            - secretRef:
+                name: main
+
+secret:
+  main:
+    enabled: true
+    data:
+      RAILS_MASTER_KEY: '{{ .Values.config.railsMasterKey }}'
+
+persistence:
+  storage:
+    enabled: true
+    mountPath: /rails/storage
+    readOnly: false
+  audiobooks:
+    enabled: true
+    mountPath: /audiobooks
+    readOnly: false
+  ebooks:
+    enabled: true
+    mountPath: /ebooks
+    readOnly: false
+  downloads:
+    enabled: true
+    mountPath: /downloads
+    readOnly: false

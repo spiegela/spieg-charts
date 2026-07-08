@@ -1,0 +1,39 @@
+image:
+  repository: ghcr.io/kkodecs/livrarr
+  tag: "0.1.0-alpha5"
+  pullPolicy: IfNotPresent
+
+service:
+  main:
+    ports:
+      main:
+        protocol: http
+        targetPort: 8789
+        port: 8789
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          probes:
+            liveness:
+              path: /api/v1/health
+            readiness:
+              path: /api/v1/health
+            startup:
+              path: /api/v1/health
+
+persistence:
+  config:
+    enabled: true
+    mountPath: /config
+    readOnly: false
+  books:
+    enabled: true
+    mountPath: /books
+    readOnly: false
+  downloads:
+    enabled: true
+    mountPath: /downloads
+    readOnly: false

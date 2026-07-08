@@ -1,0 +1,17 @@
+---
+apiVersion: v2
+name: zublo
+description: Zublo is a self-hosted personal subscription tracker backed by PocketBase.
+type: application
+version: 1.0.0
+appVersion: "0.1.0"
+sources:
+  - https://github.com/danielalves96/zublo
+dependencies:
+  - name: common
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []

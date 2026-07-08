@@ -1,0 +1,21 @@
+---
+apiVersion: v2
+name: spotizerr
+description: Spotizerr downloads Spotify tracks, playlists, albums, and podcasts through a self-hosted web UI.
+type: application
+version: 1.0.0
+appVersion: "latest"
+sources:
+  - https://github.com/nor-dee/spotizerr-spotify
+dependencies:
+  - name: common
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: [ ]
+    import-values: [ ]
+  - name: redis
+    version: 17.9.1
+    repository: oci://oci.trueforge.org/truecharts
+    condition: redis.enabled

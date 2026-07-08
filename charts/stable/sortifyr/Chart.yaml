@@ -1,0 +1,21 @@
+---
+apiVersion: v2
+name: sortifyr
+description: Sortifyr is a self-hosted Spotify playlist and library management application.
+type: application
+version: 1.0.0
+appVersion: "latest"
+sources:
+  - https://github.com/Topvennie/sortifyr
+dependencies:
+  - name: common
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: [ ]
+    import-values: [ ]
+  - name: redis
+    version: 17.9.1
+    repository: oci://oci.trueforge.org/truecharts
+    condition: redis.enabled

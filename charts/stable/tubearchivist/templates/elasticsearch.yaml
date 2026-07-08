@@ -1,0 +1,39 @@
+{{- if .Values.eck.enabled }}
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: {{ printf "%s-elasticsearch" .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  version: {{ .Values.eck.version | quote }}
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: true
+  nodeSets:
+    - name: default
+      count: {{ .Values.eck.nodeCount }}
+      config:
+        {{- toYaml .Values.eck.nodeSet.config | nindent 8 }}
+      podTemplate:
+        spec:
+          containers:
+            - name: elasticsearch
+              env:
+                - name: ES_JAVA_OPTS
+                  value: {{ .Values.eck.esJavaOpts | quote }}
+              resources:
+                {{- toYaml .Values.eck.resources | nindent 16 }}
+      volumeClaimTemplates:
+        - metadata:
+            name: elasticsearch-data
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            {{- with .Values.eck.storage.storageClassName }}
+            storageClassName: {{ . | quote }}
+            {{- end }}
+            resources:
+              requests:
+                storage: {{ .Values.eck.storage.size | quote }}
+{{- end }}

@@ -1,0 +1,103 @@
+image:
+  repository: ghcr.io/topvennie/sortifyr
+  tag: latest
+  pullPolicy: Always
+
+config:
+  appEnv: production
+  appName: sortifyr
+  server:
+    host: 0.0.0.0
+    port: 8000
+  auth:
+    redirectUrl: ""
+    spotify:
+      callbackUrl: ""
+      clientId: ""
+      clientSecret: ""
+  storage:
+    provider: minio
+  minio:
+    bucket: sortifyr
+    endpoint: s3.example.internal:9000
+    secure: false
+    username: ""
+    password: ""
+
+service:
+  main:
+    ports:
+      main:
+        protocol: http
+        targetPort: 8000
+        port: 8000
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          probes:
+            liveness:
+              type: tcp
+            readiness:
+              type: tcp
+            startup:
+              type: tcp
+          env:
+            APP_ENV: '{{ .Values.config.appEnv }}'
+            APP_NAME: '{{ .Values.config.appName }}'
+            SERVER_HOST: '{{ .Values.config.server.host }}'
+            SERVER_PORT: "{{ .Values.config.server.port }}"
+            AUTH_REDIRECT_URL: '{{ .Values.config.auth.redirectUrl }}'
+            AUTH_SPOTIFY_CALLBACK_URL: '{{ .Values.config.auth.spotify.callbackUrl }}'
+            STORAGE_PROVIDER: '{{ .Values.config.storage.provider }}'
+            MINIO_BUCKET: '{{ .Values.config.minio.bucket }}'
+            MINIO_ENDPOINT: '{{ .Values.config.minio.endpoint }}'
+            MINIO_SECURE: '{{ .Values.config.minio.secure }}'
+            REDIS_URL:
+              secretKeyRef:
+                name: '{{ .Release.Name }}-rediscreds'
+                expandObjectName: false
+                key: url
+            DB_HOST:
+              secretKeyRef:
+                name: cnpg-main-urls
+                key: host
+            DB_PORT: "5432"
+            DB_DATABASE: '{{ .Values.cnpg.main.database }}'
+            DB_USER:
+              secretKeyRef:
+                name: cnpg-main-user
+                key: username
+            DB_PASSWORD:
+              secretKeyRef:
+                name: cnpg-main-user
+                key: password
+          envFrom:
+            - secretRef:
+                name: main
+
+secret:
+  main:
+    enabled: true
+    data:
+      AUTH_SPOTIFY_CLIENT_ID: '{{ .Values.config.auth.spotify.clientId }}'
+      AUTH_SPOTIFY_CLIENT_SECRET: '{{ .Values.config.auth.spotify.clientSecret }}'
+      MINIO_USERNAME: '{{ .Values.config.minio.username }}'
+      MINIO_PASSWORD: '{{ .Values.config.minio.password }}'
+
+persistence:
+  shared:
+    enabled: true
+  tmp:
+    enabled: true
+
+redis:
+  enabled: true
+
+cnpg:
+  main:
+    enabled: true
+    user: sortifyr
+    database: sortifyr

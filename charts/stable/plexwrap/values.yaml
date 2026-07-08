@@ -1,0 +1,49 @@
+image:
+  repository: ghcr.io/plexguide/huntarr
+  tag: "8.2.10"
+  pullPolicy: IfNotPresent
+
+service:
+  main:
+    ports:
+      main:
+        port: 8000
+
+config:
+  tautulli:
+    url: http://your-tautulli-server:8181
+    api_key: YOUR_TAUTULLI_API_KEY
+  openai:
+    api_key: YOUR_OPENAI_API_KEY
+    enabled: true
+  # Optional: AI-generated card images (can be expensive)
+  image_generation:
+    api_key: YOUR_GOOGLE_AI_API_KEY
+    enabled: false
+  # Optional: Custom date range
+  time_range:
+    start_date: 2024-01-01
+    end_date: 2024-12-31
+  # Optional: Map usernames to friendly display names
+  name_mappings:
+    johndoe123: John
+    janedoe456: Jane
+  # Optional: Add custom context for AI-generated content
+  # This is injected into the AI prompt to personalize the tone
+  custom_prompt_context: "This is a family server - keep it fun and friendly!"
+  # Optional: Users to exclude from wrap generation
+  excluded_users:
+    - Local
+    - admin
+
+secret:
+  main:
+    enabled: true
+    data:
+      config.yaml: |-
+        {{ .Values.config | toYaml | indent 8 }}
+persistence:
+  config:
+    enabled: true
+    mountPath: /config
+    readOnly: false

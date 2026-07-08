@@ -1,0 +1,43 @@
+image:
+  repository: registry.gitlab.com/storyteller-platform/storyteller
+  tag: latest
+  pullPolicy: Always
+
+config:
+  secretKey: ""
+
+service:
+  main:
+    ports:
+      main:
+        protocol: http
+        targetPort: 8001
+        port: 8001
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          env:
+            STORYTELLER_SECRET_KEY_FILE: /run/secrets/secret_key
+
+secret:
+  main:
+    enabled: true
+    data:
+      secret_key: '{{ include "storyteller.secretKey" . }}'
+
+persistence:
+  secret-key:
+    enabled: true
+    type: secret
+    objectName: main
+    expandObjectName: true
+    mountPath: /run/secrets/secret_key
+    subPath: secret_key
+    readOnly: true
+  data:
+    enabled: true
+    mountPath: /data
+    readOnly: false

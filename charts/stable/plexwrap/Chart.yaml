@@ -1,0 +1,18 @@
+---
+apiVersion: v2
+name: plexwrap
+description: |-
+  A personalized year-in-review experience for your Plex server users—think Spotify Wrapped, but for your media library.
+type: application
+version: 1.0.0
+appVersion: ""
+sources:
+  - https://github.com/kirarpit/plexwrap
+dependencies:
+  - name: common
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []

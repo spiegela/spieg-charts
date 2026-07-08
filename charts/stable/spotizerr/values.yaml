@@ -1,0 +1,69 @@
+image:
+  repository: cooldockerizer93/spotizerr
+  tag: latest
+  pullPolicy: Always
+
+securityContext:
+  container:
+    readOnlyRootFilesystem: false
+
+config:
+  puid: 568
+  pgid: 568
+  explicitFilter: false
+
+service:
+  main:
+    ports:
+      main:
+        protocol: http
+        targetPort: 7171
+        port: 7171
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          probes:
+            liveness:
+              type: tcp
+            readiness:
+              type: tcp
+            startup:
+              type: tcp
+          env:
+            PUID: "{{ .Values.config.puid }}"
+            PGID: "{{ .Values.config.pgid }}"
+            REDIS_URL:
+              secretKeyRef:
+                name: '{{ .Release.Name }}-rediscreds'
+                expandObjectName: false
+                key: url
+            REDIS_BACKEND:
+              secretKeyRef:
+                name: '{{ .Release.Name }}-rediscreds'
+                expandObjectName: false
+                key: url
+            EXPLICIT_FILTER: '{{ .Values.config.explicitFilter }}'
+
+persistence:
+  config:
+    enabled: true
+    mountPath: /app/data
+    readOnly: false
+  downloads:
+    enabled: true
+    mountPath: /app/downloads
+    readOnly: false
+  logs:
+    enabled: true
+    mountPath: /app/logs
+    readOnly: false
+  cache:
+    enabled: true
+    mountPath: /app/cache/.cache
+    readOnly: false
+
+redis:
+  enabled: true

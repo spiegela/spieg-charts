@@ -1,0 +1,80 @@
+image:
+  repository: thewicklowwolf/lidify
+  tag: latest
+  pullPolicy: Always
+
+config:
+  puid: 568
+  pgid: 568
+  lidarr:
+    address: http://192.168.1.2:8686
+    apiKey: ""
+  rootFolderPath: /data/media/music/
+  lastFm:
+    apiKey: ""
+    apiSecret: ""
+  spotify:
+    clientId: ""
+    clientSecret: ""
+  mode: LastFM
+  fallbackToTopResult: false
+  lidarrApiTimeout: 120
+  qualityProfileId: 1
+  metadataProfileId: 1
+  searchForMissingAlbums: false
+  dryRunAddingToLidarr: false
+  appName: Lidify
+  appRev: "0.01"
+  appUrl: ""
+  autoStart: false
+  autoStartDelay: 60
+
+service:
+  main:
+    ports:
+      main:
+        protocol: http
+        targetPort: 5000
+        port: 5000
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          envFrom:
+            - secretRef:
+                name: main
+          env:
+            PUID: "{{ .Values.config.puid }}"
+            PGID: "{{ .Values.config.pgid }}"
+            lidarr_address: '{{ .Values.config.lidarr.address }}'
+            root_folder_path: '{{ .Values.config.rootFolderPath }}'
+            mode: '{{ .Values.config.mode }}'
+            fallback_to_top_result: '{{ .Values.config.fallbackToTopResult }}'
+            lidarr_api_timeout: "{{ .Values.config.lidarrApiTimeout }}"
+            quality_profile_id: "{{ .Values.config.qualityProfileId }}"
+            metadata_profile_id: "{{ .Values.config.metadataProfileId }}"
+            search_for_missing_albums: '{{ .Values.config.searchForMissingAlbums }}'
+            dry_run_adding_to_lidarr: '{{ .Values.config.dryRunAddingToLidarr }}'
+            app_name: '{{ .Values.config.appName }}'
+            app_rev: '{{ .Values.config.appRev }}'
+            app_url: '{{ .Values.config.appUrl }}'
+            auto_start: '{{ .Values.config.autoStart }}'
+            auto_start_delay: "{{ .Values.config.autoStartDelay }}"
+
+secret:
+  main:
+    enabled: true
+    data:
+      lidarr_api_key: '{{ .Values.config.lidarr.apiKey }}'
+      last_fm_api_key: '{{ .Values.config.lastFm.apiKey }}'
+      last_fm_api_secret: '{{ .Values.config.lastFm.apiSecret }}'
+      spotify_client_id: '{{ .Values.config.spotify.clientId }}'
+      spotify_client_secret: '{{ .Values.config.spotify.clientSecret }}'
+
+persistence:
+  config:
+    enabled: true
+    mountPath: /lidify/config
+    readOnly: false

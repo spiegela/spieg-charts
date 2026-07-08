@@ -1,0 +1,97 @@
+image:
+  repository: bbilly1/tubearchivist
+  tag: latest
+  pullPolicy: Always
+
+securityContext:
+  container:
+    readOnlyRootFilesystem: false
+
+config:
+  hostUid: 568
+  hostGid: 568
+  taHost: http://tubearchivist.local:8000
+  taUsername: tubearchivist
+  taPassword: ""
+
+service:
+  main:
+    ports:
+      main:
+        protocol: http
+        targetPort: 8000
+        port: 8000
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          probes:
+            liveness:
+              path: /api/health/
+            readiness:
+              path: /api/health/
+            startup:
+              path: /api/health/
+          env:
+            ES_URL: 'http://{{ .Release.Name }}-elasticsearch-es-http:9200'
+            ES_DISABLE_VERIFY_SSL: "true"
+            REDIS_CON:
+              secretKeyRef:
+                name: '{{ .Release.Name }}-rediscreds'
+                expandObjectName: false
+                key: url
+            ELASTIC_PASSWORD:
+              secretKeyRef:
+                name: '{{ .Release.Name }}-elasticsearch-es-elastic-user'
+                expandObjectName: false
+                key: elastic
+            HOST_UID: "{{ .Values.config.hostUid }}"
+            HOST_GID: "{{ .Values.config.hostGid }}"
+            TA_HOST: '{{ .Values.config.taHost }}'
+            TA_USERNAME: '{{ .Values.config.taUsername }}'
+          envFrom:
+            - secretRef:
+                name: main
+
+secret:
+  main:
+    enabled: true
+    data:
+      TA_PASSWORD: '{{ .Values.config.taPassword }}'
+
+persistence:
+  media:
+    enabled: true
+    mountPath: /youtube
+    readOnly: false
+  cache:
+    enabled: true
+    mountPath: /cache
+    readOnly: false
+
+redis:
+  enabled: true
+
+eck:
+  enabled: true
+  version: 8.19.0
+  nodeCount: 1
+  storage:
+    size: 50Gi
+    storageClassName: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 2Gi
+    limits:
+      memory: 2Gi
+  esJavaOpts: -Xms1g -Xmx1g
+  nodeSet:
+    config:
+      node.store.allow_mmap: false
+      xpack.security.enabled: true
+      discovery.type: single-node
+      path.repo:
+        - /usr/share/elasticsearch/data/snapshot
