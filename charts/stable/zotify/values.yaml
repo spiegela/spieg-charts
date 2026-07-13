@@ -1,0 +1,120 @@
+image:
+  repository: bussnet/zotify
+  tag: latest
+  pullPolicy: Always
+
+securityContext:
+  container:
+    readOnlyRootFilesystem: false
+
+config:
+  credentialsJson: ""
+  credentialsLocation: /config/credentials.json
+  rootPath: /downloads/music
+  rootPodcastPath: /downloads/podcasts
+  songArchive: /config/song_archive
+  output: "{artist}/{album}/{track_number} - {song_name}.{ext}"
+  downloadFormat: ogg
+  downloadQuality: auto
+  skipExisting: true
+  skipPreviouslyDownloaded: true
+  downloadRealTime: false
+  downloadLyrics: true
+  liked: false
+  playlists: false
+  followed: false
+  urls: []
+  extraArgs: []
+
+service:
+  main:
+    enabled: false
+
+workload:
+  main:
+    type: CronJob
+    schedule: "0 3 * * *"
+    suspend: true
+    concurrencyPolicy: Forbid
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 3
+    startingDeadlineSeconds: 600
+    ttlSecondsAfterFinished: 3600
+    dbWait: false
+    podSpec:
+      restartPolicy: Never
+      containers:
+        main:
+          probes:
+            liveness:
+              enabled: false
+            readiness:
+              enabled: false
+            startup:
+              enabled: false
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              set -eu
+              if [ "{{ len .Values.config.urls }}" = "0" ] && [ "{{ .Values.config.liked }}" != "true" ] && [ "{{ .Values.config.playlists }}" != "true" ] && [ "{{ .Values.config.followed }}" != "true" ]; then
+                echo "No Zotify targets configured; set config.urls or enable liked/playlists/followed."
+                exit 0
+              fi
+              exec python3 -m zotify \
+                --credentials-location {{ .Values.config.credentialsLocation | quote }} \
+                --root-path {{ .Values.config.rootPath | quote }} \
+                --root-podcast-path {{ .Values.config.rootPodcastPath | quote }} \
+                --song-archive {{ .Values.config.songArchive | quote }} \
+                --output {{ .Values.config.output | quote }} \
+                --download-format {{ .Values.config.downloadFormat | quote }} \
+                --download-quality {{ .Values.config.downloadQuality | quote }} \
+                --skip-existing={{ .Values.config.skipExisting }} \
+                --skip-previously-downloaded={{ .Values.config.skipPreviouslyDownloaded }} \
+                --download-real-time={{ .Values.config.downloadRealTime }} \
+                --download-lyrics={{ .Values.config.downloadLyrics }} \
+                {{- if .Values.config.liked }}
+                --liked \
+                {{- end }}
+                {{- if .Values.config.playlists }}
+                --playlist \
+                {{- end }}
+                {{- if .Values.config.followed }}
+                --followed \
+                {{- end }}
+                {{- range .Values.config.extraArgs }}
+                {{ . | quote }} \
+                {{- end }}
+                {{- range .Values.config.urls }}
+                {{ . | quote }} \
+                {{- end }}
+                ""
+
+secret:
+  credentials:
+    enabled: true
+    data:
+      credentials.json: '{{ .Values.config.credentialsJson }}'
+
+persistence:
+  config:
+    enabled: true
+    mountPath: /config
+    readOnly: false
+  credentials:
+    enabled: true
+    type: secret
+    objectName: credentials
+    expandObjectName: true
+    optional: true
+    mountPath: /config/credentials.json
+    subPath: credentials.json
+  music:
+    enabled: true
+    mountPath: /downloads/music
+    readOnly: false
+  podcasts:
+    enabled: true
+    mountPath: /downloads/podcasts
+    readOnly: false
