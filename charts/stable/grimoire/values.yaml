@@ -1,0 +1,62 @@
+image:
+  repository: hunterreadca/grimoire
+  tag: latest
+  pullPolicy: Always
+
+config:
+  secretKey: ""
+  workers: 2
+  libraryPath: /library
+  dataPath: /data
+  baseUrl: http://localhost:9481
+  opdsEnabled: false
+  logLevel: info
+  valkeyUrl: ""
+
+service:
+  main:
+    ports:
+      main:
+        protocol: http
+        targetPort: 9481
+        port: 9481
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          probes:
+            liveness:
+              path: /api/auth/status
+            readiness:
+              path: /api/auth/status
+            startup:
+              path: /api/auth/status
+          envFrom:
+            - secretRef:
+                name: main
+          env:
+            LIBRARY_PATH: '{{ .Values.config.libraryPath }}'
+            DATA_PATH: '{{ .Values.config.dataPath }}'
+            WORKERS: "{{ .Values.config.workers }}"
+            BASE_URL: '{{ .Values.config.baseUrl }}'
+            OPDS_ENABLED: '{{ .Values.config.opdsEnabled }}'
+            LOG_LEVEL: '{{ .Values.config.logLevel }}'
+            VALKEY_URL: '{{ .Values.config.valkeyUrl }}'
+
+secret:
+  main:
+    enabled: true
+    data:
+      SECRET_KEY: '{{ include "grimoire.secretKey" . }}'
+
+persistence:
+  library:
+    enabled: false
+    mountPath: /library
+    readOnly: true
+  data:
+    enabled: true
+    mountPath: /data
+    readOnly: false
