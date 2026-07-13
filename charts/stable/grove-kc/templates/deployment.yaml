@@ -44,7 +44,7 @@ spec:
             - name: {{ $name }}
               value: {{ $value | quote }}
             {{- end }}
-          {{- if or .Values.existingSecret .Values.secretEnv.CLOUDFLARE_ACCOUNT_ID .Values.secretEnv.CLOUDFLARE_API_TOKEN }}
+          {{- if or .Values.existingSecret .Values.secretEnv.CLOUDFLARE_ACCOUNT_ID .Values.secretEnv.CLOUDFLARE_API_TOKEN .Values.secretEnv.MAILJET_API_KEY .Values.secretEnv.MAILJET_SECRET_KEY }}
           envFrom:
             - secretRef:
                 name: {{ default (include "grove-kc.secretName" .) .Values.existingSecret }}
