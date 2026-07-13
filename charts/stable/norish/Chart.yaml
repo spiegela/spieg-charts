@@ -1,0 +1,24 @@
+---
+apiVersion: v2
+name: norish
+description: Norish is a real-time household recipe, meal planning, and grocery app.
+type: application
+version: 1.0.0
+appVersion: "latest"
+sources:
+  - https://github.com/norish-recipes/norish
+dependencies:
+  - name: common
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []
+  - name: redis
+    version: 17.9.1
+    repository: oci://oci.trueforge.org/truecharts
+    condition: redis.enabled
+    alias: ""
+    tags: []
+    import-values: []

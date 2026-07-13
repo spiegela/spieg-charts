@@ -1,0 +1,137 @@
+image:
+  repository: norishapp/norish
+  tag: latest
+  pullPolicy: Always
+
+chromeImage:
+  repository: zenika/alpine-chrome
+  tag: latest
+  pullPolicy: Always
+
+securityContext:
+  container:
+    readOnlyRootFilesystem: false
+
+config:
+  authUrl: http://localhost:3000
+  masterKey: ""
+  uploadsDir: /app/uploads
+  chromeWsEndpoint: ws://localhost:3003
+  parserApiTimeoutMs: 15000
+  legacyRecipeParserRollback: false
+  nextPublicLogLevel: info
+  trustedOrigins: ""
+  passwordAuthEnabled: true
+  oidc:
+    name: ""
+    issuer: ""
+    clientId: ""
+    clientSecret: ""
+    wellknown: ""
+  github:
+    clientId: ""
+    clientSecret: ""
+  google:
+    clientId: ""
+    clientSecret: ""
+
+service:
+  main:
+    ports:
+      main:
+        protocol: http
+        targetPort: 3000
+        port: 3000
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          probes:
+            liveness:
+              path: /api/v1/health
+            readiness:
+              path: /api/v1/health
+            startup:
+              path: /api/v1/health
+          env:
+            AUTH_URL: '{{ .Values.config.authUrl }}'
+            DATABASE_URL:
+              secretKeyRef:
+                name: cnpg-main-urls
+                key: std
+            CHROME_WS_ENDPOINT: '{{ .Values.config.chromeWsEndpoint }}'
+            REDIS_URL:
+              secretKeyRef:
+                name: '{{ .Release.Name }}-rediscreds'
+                expandObjectName: false
+                key: url
+            UPLOADS_DIR: '{{ .Values.config.uploadsDir }}'
+            PARSER_API_TIMEOUT_MS: "{{ .Values.config.parserApiTimeoutMs }}"
+            LEGACY_RECIPE_PARSER_ROLLBACK: '{{ .Values.config.legacyRecipeParserRollback }}'
+            NEXT_PUBLIC_LOG_LEVEL: '{{ .Values.config.nextPublicLogLevel }}'
+            TRUSTED_ORIGINS: '{{ .Values.config.trustedOrigins }}'
+            PASSWORD_AUTH_ENABLED: '{{ .Values.config.passwordAuthEnabled }}'
+          envFrom:
+            - secretRef:
+                name: main
+        chrome:
+          enabled: true
+          primary: false
+          imageSelector: chromeImage
+          probes:
+            liveness:
+              enabled: true
+              type: tcp
+              port: 3003
+            readiness:
+              enabled: true
+              type: tcp
+              port: 3003
+            startup:
+              enabled: true
+              type: tcp
+              port: 3003
+          args:
+            - --no-sandbox
+            - --disable-gpu
+            - --disable-dev-shm-usage
+            - --disable-features=dbus
+            - --remote-debugging-address=0.0.0.0
+            - --remote-debugging-port=3003
+            - --headless
+
+secret:
+  main:
+    enabled: true
+    data:
+      MASTER_KEY: '{{ include "norish.masterKey" . }}'
+      OIDC_NAME: '{{ .Values.config.oidc.name }}'
+      OIDC_ISSUER: '{{ .Values.config.oidc.issuer }}'
+      OIDC_CLIENT_ID: '{{ .Values.config.oidc.clientId }}'
+      OIDC_CLIENT_SECRET: '{{ .Values.config.oidc.clientSecret }}'
+      OIDC_WELLKNOWN: '{{ .Values.config.oidc.wellknown }}'
+      GITHUB_CLIENT_ID: '{{ .Values.config.github.clientId }}'
+      GITHUB_CLIENT_SECRET: '{{ .Values.config.github.clientSecret }}'
+      GOOGLE_CLIENT_ID: '{{ .Values.config.google.clientId }}'
+      GOOGLE_CLIENT_SECRET: '{{ .Values.config.google.clientSecret }}'
+
+persistence:
+  uploads:
+    enabled: true
+    mountPath: /app/uploads
+    readOnly: false
+  tmp:
+    enabled: true
+  shared:
+    enabled: true
+
+redis:
+  enabled: true
+
+cnpg:
+  main:
+    enabled: true
+    user: norish
+    database: norish
