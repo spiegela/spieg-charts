@@ -1,0 +1,85 @@
+image:
+  repository: nobbe/ignis
+  tag: latest
+  pullPolicy: Always
+
+# Ignis's entrypoint creates the requested user and fixes the ownership of all
+# persisted paths before dropping privileges to PUID/PGID.
+securityContext:
+  container:
+    runAsNonRoot: false
+    runAsUser: 0
+    runAsGroup: 0
+    readOnlyRootFilesystem: false
+    allowPrivilegeEscalation: true
+    PUID: 1000
+  pod:
+    fsGroup: 1000
+
+config:
+  obsidianVersion: 1.12.7
+  autoCreateDefault: false
+  writeCoalesceMs: 0
+  wsOrigins: ""
+  proxyAllowPrivateHosts: ""
+  # Set this to a mounted .deb, .asar.gz, or .asar file for an offline first
+  # installation. See the chart README for an example.
+  obsidianPackage: ""
+
+service:
+  main:
+    ports:
+      main:
+        protocol: http
+        targetPort: 8080
+        port: 8080
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          probes:
+            liveness:
+              type: tcp
+              port: 8080
+            readiness:
+              type: tcp
+              port: 8080
+            startup:
+              type: tcp
+              port: 8080
+              initialDelaySeconds: 10
+              periodSeconds: 10
+              failureThreshold: 90
+          env:
+            PORT: "8080"
+            VAULT_ROOT: /vaults
+            DATA_ROOT: /app/data
+            OBSIDIAN_ASSETS_PATH: /app/obsidian-app
+            OBSIDIAN_VERSION: '{{ .Values.config.obsidianVersion }}'
+            OBSIDIAN_PACKAGE: '{{ .Values.config.obsidianPackage }}'
+            AUTO_CREATE_DEFAULT: '{{ .Values.config.autoCreateDefault }}'
+            WRITE_COALESCE_MS: '{{ .Values.config.writeCoalesceMs }}'
+            WS_ORIGINS: '{{ .Values.config.wsOrigins }}'
+            PROXY_ALLOW_PRIVATE_HOSTS: '{{ .Values.config.proxyAllowPrivateHosts }}'
+
+persistence:
+  vaults:
+    enabled: true
+    mountPath: /vaults
+    readOnly: false
+    type: pvc
+    size: 64Gi
+  data:
+    enabled: true
+    mountPath: /app/data
+    readOnly: false
+    type: pvc
+    size: 2Gi
+  obsidian-app:
+    enabled: true
+    mountPath: /app/obsidian-app
+    readOnly: false
+    type: pvc
+    size: 2Gi

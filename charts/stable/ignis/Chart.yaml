@@ -1,0 +1,17 @@
+---
+apiVersion: v2
+name: ignis
+description: Ignis is a self-hosted web interface for Obsidian vaults.
+type: application
+version: 1.0.0
+appVersion: "latest"
+sources:
+  - https://github.com/Nystik-gh/ignis
+dependencies:
+  - name: common
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []
