@@ -1,0 +1,53 @@
+image:
+  repository: nwarelab/sm2
+  tag: 0.1.7
+  pullPolicy: IfNotPresent
+
+# sm² removes its image-provided reporting task at startup. The upstream image
+# runs as root and needs a writable root filesystem solely for that cleanup.
+securityContext:
+  container:
+    runAsNonRoot: false
+    runAsUser: 0
+    runAsGroup: 0
+    readOnlyRootFilesystem: false
+    allowPrivilegeEscalation: false
+
+config:
+  deviceApiTimeoutSec: 2
+
+service:
+  main:
+    ports:
+      main:
+        protocol: http
+        targetPort: 8456
+        port: 8456
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          probes:
+            liveness:
+              type: tcp
+              port: 8456
+            readiness:
+              type: tcp
+              port: 8456
+            startup:
+              type: tcp
+              port: 8456
+              initialDelaySeconds: 5
+              periodSeconds: 5
+              failureThreshold: 12
+          env:
+            DISABLE_REPORTING: "true"
+            DEVICE_API_TIMEOUT_SEC: '{{ .Values.config.deviceApiTimeoutSec }}'
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              memory: 128Mi

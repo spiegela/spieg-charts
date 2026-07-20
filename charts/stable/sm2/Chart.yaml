@@ -1,0 +1,17 @@
+---
+apiVersion: v2
+name: sm2
+description: sm² is a read-only monitor for multiple Syncthing instances.
+type: application
+version: 1.0.0
+appVersion: "0.1.7"
+sources:
+  - https://github.com/nware-lab/sm2
+dependencies:
+  - name: common
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []
