@@ -1,0 +1,17 @@
+---
+apiVersion: v2
+name: aurral
+description: Aurral is a Lidarr companion for self-hosted music discovery.
+type: application
+version: 1.0.0
+appVersion: "latest"
+sources:
+  - https://github.com/lklynet/aurral
+dependencies:
+  - name: common
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []

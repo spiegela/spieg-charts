@@ -1,0 +1,38 @@
+image:
+  repository: ghcr.io/lklynet/aurral
+  tag: latest
+  pullPolicy: Always
+
+config:
+  puid: 568
+  pgid: 568
+
+service:
+  main:
+    ports:
+      main:
+        protocol: http
+        targetPort: 3001
+        port: 3001
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          env:
+            PUID: "{{ .Values.config.puid }}"
+            PGID: "{{ .Values.config.pgid }}"
+
+persistence:
+  config:
+    enabled: true
+    type: hostPath
+    hostPath: /var/mnt/Pool1/apps/static/lidarr/aurral
+    hostPathType: DirectoryOrCreate
+    mountPath: /config
+    readOnly: false
+  data:
+    enabled: true
+    mountPath: /data
+    readOnly: false
