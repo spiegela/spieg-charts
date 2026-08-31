@@ -5,8 +5,8 @@ description: |-
   A music library manager for your offline and online music sources which can easily stream your favourite music to a
   wide range of supported players and be combined with the power of Home Assistant!
 type: application
-version: 1.0.3
-appVersion: "v2.6"
+version: 1.1.0
+appVersion: "v2.10.1"
 sources:
   - https://www.music-assistant.io/
 dependencies:

@@ -1,12 +1,23 @@
 image:
   repository: ghcr.io/music-assistant/server
-  tag: "2.6"
-  pullPolicy: Always
+  tag: "2.10.1"
+  pullPolicy: IfNotPresent
 
-apiBridgeImage:
-  repository: ghcr.io/alams154/music-assistant-alexa-api
-  tag: latest
-  pullPolicy: Always
+alexaSkill:
+  repository: ghcr.io/alams154/music-assistant-skill
+  tag: 0.0.39-beta
+  pullPolicy: IfNotPresent
+
+config:
+  server:
+    hostname:
+    url:
+    apiToken:
+  alexaSkill:
+    url:
+    username:
+    password:
+    enableAPL: false
 
 workload:
   main:
@@ -20,23 +31,34 @@ workload:
             - /data/.cache
           env:
             APPDATA: /data
-        apibridge:
+        alexaSkill:
           enabled: true
           primary: false
-          imageSelector: apiBridgeImage
+          imageSelector: alexaSkill
+          env:
+            SKILL_HOSTNAME: '{{ .Values.service.main.ports.alexaSkill.url }}'
+            MA_HOSTNAME: '{{ .Values.config.server.url }}'
+            MA_API_TOKEN: '{{ .Values.config.server.apiToken }}'
+            APP_USERNAME: /run/secrets/APP_USERNAME
+            APP_PASSWORD: /run/secrets/APP_PASSWORD
+            PORT: "{{ $.Values.service.main.ports.alexaSkill.targetPort | default .Values.service.main.ports.alexaSkill.port }}"
+            DEBUG_PORT: "{{ $.Values.service.main.ports.alexaSkillDebug.targetPort | default .Values.service.main.ports.alexaSkillDebug.port }}"
+            LOCALE: en-US # optional: skill locale (e.g. en-US, en-GB, de-DE)
+            AWS_DEFAULT_REGION: us-east-1 #optional
+            TZ: America/Chicago # set container timezone (override as needed)
           probes:
             liveness:
               enabled: true
-              type: "{{ .Values.service.main.ports.apibridge.protocol }}"
-              port: "{{ $.Values.service.main.ports.apibridge.targetPort | default .Values.service.main.ports.apibridge.port }}"
+              type: "{{ .Values.service.main.ports.alexaSkill.protocol }}"
+              port: "{{ $.Values.service.main.ports.alexaSkill.targetPort | default .Values.service.main.ports.alexaSkill.port }}"
             readiness:
               enabled: true
-              type: "{{ .Values.service.main.ports.apibridge.protocol }}"
-              port: "{{ $.Values.service.main.ports.apibridge.targetPort | default .Values.service.main.ports.apibridge.port }}"
+              type: "{{ .Values.service.main.ports.alexaSkill.protocol }}"
+              port: "{{ $.Values.service.main.ports.alexaSkill.targetPort | default .Values.service.main.ports.alexaSkill.port }}"
             startup:
               enabled: true
-              type: "{{ .Values.service.main.ports.apibridge.protocol }}"
-              port: "{{ $.Values.service.main.ports.apibridge.targetPort | default .Values.service.main.ports.apibridge.port }}"
+              type: "{{ .Values.service.main.ports.alexaSkill.protocol }}"
+              port: "{{ $.Values.service.main.ports.alexaSkill.targetPort | default .Values.service.main.ports.alexaSkill.port }}"
 
 service:
   main:
@@ -53,10 +75,15 @@ service:
         protocol: http
         port: 8097
         targetPort: 8097
-      apibridge:
+      alexaSkill:
         enabled: true
-        port: 3000
-        targetPort: 3000
+        port: 5000
+        targetPort: 5000
+        protocol: tcp
+      alexaSkillDebug:
+        enabled: true
+        port: 5678
+        targetPort: 5678
         protocol: tcp
       bonjour:
         enabled: true
@@ -81,7 +108,21 @@ securityContext:
         - SYS_ADMIN
         - DAC_READ_SEARCH
 
+secret:
+  main:
+    enabled: true
+    data:
+      APP_USERNAME : '{{ .Values.config.alexaSkill.username }}'
+      APP_PASSWORD: '{{ .Values.config.alexaSkill.password }}'
+
 persistence:
+  secrets:
+    enabled: true
+    mountPath: "/run/secrets"
+  alexaSkillAskData:
+    enabled: true
+    mountPath: /data/root/.ask
+    readOnly: false
   data:
     enabled: true
     mountPath: /data
