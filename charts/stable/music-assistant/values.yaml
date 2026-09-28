@@ -31,34 +31,33 @@ workload:
             - /data/.cache
           env:
             APPDATA: /data
-        alexaSkill:
+        alexa-skill:
           enabled: true
           primary: false
           imageSelector: alexaSkill
           env:
-            SKILL_HOSTNAME: '{{ .Values.service.main.ports.alexaSkill.url }}'
+            SKILL_HOSTNAME: '{{ .Values.config.alexaSkill.url }}'
             MA_HOSTNAME: '{{ .Values.config.server.url }}'
             MA_API_TOKEN: '{{ .Values.config.server.apiToken }}'
             APP_USERNAME: /run/secrets/APP_USERNAME
             APP_PASSWORD: /run/secrets/APP_PASSWORD
-            PORT: "{{ $.Values.service.main.ports.alexaSkill.targetPort | default .Values.service.main.ports.alexaSkill.port }}"
-            DEBUG_PORT: "{{ $.Values.service.main.ports.alexaSkillDebug.targetPort | default .Values.service.main.ports.alexaSkillDebug.port }}"
+            PORT: '{{ (index .Values.service.main.ports "alexa-skill").targetPort | default (index .Values.service.main.ports "alexa-skill").port }}'
+            DEBUG_PORT: '{{ (index .Values.service.main.ports "alexa-debug").targetPort | default (index .Values.service.main.ports "alexa-debug").port }}'
             LOCALE: en-US # optional: skill locale (e.g. en-US, en-GB, de-DE)
             AWS_DEFAULT_REGION: us-east-1 #optional
-            TZ: America/Chicago # set container timezone (override as needed)
           probes:
             liveness:
               enabled: true
-              type: "{{ .Values.service.main.ports.alexaSkill.protocol }}"
-              port: "{{ $.Values.service.main.ports.alexaSkill.targetPort | default .Values.service.main.ports.alexaSkill.port }}"
+              type: '{{ (index .Values.service.main.ports "alexa-skill").protocol }}'
+              port: '{{ (index .Values.service.main.ports "alexa-skill").targetPort | default (index .Values.service.main.ports "alexa-skill").port }}'
             readiness:
               enabled: true
-              type: "{{ .Values.service.main.ports.alexaSkill.protocol }}"
-              port: "{{ $.Values.service.main.ports.alexaSkill.targetPort | default .Values.service.main.ports.alexaSkill.port }}"
+              type: '{{ (index .Values.service.main.ports "alexa-skill").protocol }}'
+              port: '{{ (index .Values.service.main.ports "alexa-skill").targetPort | default (index .Values.service.main.ports "alexa-skill").port }}'
             startup:
               enabled: true
-              type: "{{ .Values.service.main.ports.alexaSkill.protocol }}"
-              port: "{{ $.Values.service.main.ports.alexaSkill.targetPort | default .Values.service.main.ports.alexaSkill.port }}"
+              type: '{{ (index .Values.service.main.ports "alexa-skill").protocol }}'
+              port: '{{ (index .Values.service.main.ports "alexa-skill").targetPort | default (index .Values.service.main.ports "alexa-skill").port }}'
 
 service:
   main:
@@ -75,12 +74,12 @@ service:
         protocol: http
         port: 8097
         targetPort: 8097
-      alexaSkill:
+      alexa-skill:
         enabled: true
         port: 5000
         targetPort: 5000
         protocol: tcp
-      alexaSkillDebug:
+      alexa-debug:
         enabled: true
         port: 5678
         targetPort: 5678
@@ -119,7 +118,7 @@ persistence:
   secrets:
     enabled: true
     mountPath: "/run/secrets"
-  alexaSkillAskData:
+  alexa-skill-ask-data:
     enabled: true
     mountPath: /data/root/.ask
     readOnly: false

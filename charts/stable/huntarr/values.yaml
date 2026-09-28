@@ -1,6 +1,6 @@
 image:
-  repository: ghcr.io/plexguide/huntarr
-  tag: "9.1.12"
+  repository: docker.io/mrjacobarussell/huntarr-revisited
+  tag: "1.1.1@sha256:6e78fc24bdfa3452891a9eb14f2f53d5455bc9efd39774e46a9e710d2a16ce37"
   pullPolicy: IfNotPresent
 
 service:
