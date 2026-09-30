@@ -1,0 +1,21 @@
+{{/* Make sure all variables are set properly */}}
+{{- include "tc.v1.common.loader.init" . }}
+
+{{- if ne (int .Values.workload.main.replicas) 1 }}
+  {{- fail "navigatorr requires workload.main.replicas: 1 because MCP sessions and the queue lock are process-local" }}
+{{- end }}
+
+{{- if ne (int .Values.gateway.maxSessions) 1 }}
+  {{- fail "navigatorr requires gateway.maxSessions: 1 because every gateway session opens the same exclusive queue lock" }}
+{{- end }}
+
+{{- $ingress := .Values.ingress.main -}}
+{{- $explicitTLS := not (empty $ingress.tls) -}}
+{{- $certManagerTLS := $ingress.integrations.certManager.enabled -}}
+{{- $traefikTLS := and $ingress.integrations.traefik.enabled $ingress.integrations.traefik.forceTLS -}}
+{{- if and $ingress.enabled (not (or $explicitTLS $certManagerTLS $traefikTLS)) }}
+  {{- fail "navigatorr public ingress requires TLS via ingress.main.tls, cert-manager, or the TLS-enabled Traefik integration" }}
+{{- end }}
+
+{{/* Render the templates */}}
+{{ include "tc.v1.common.loader.apply" . }}

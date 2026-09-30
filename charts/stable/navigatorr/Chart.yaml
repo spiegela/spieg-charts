@@ -1,0 +1,29 @@
+---
+apiVersion: v2
+name: navigatorr
+description: >-
+  Navigatorr exposes self-hosted media services to MCP clients through an
+  authenticated HTTP endpoint.
+type: application
+version: 1.0.0
+appVersion: "45e22ee"
+home: https://github.com/JakeNesler/navigatorr
+keywords:
+  - mcp
+  - sonarr
+  - radarr
+  - lidarr
+  - readarr
+sources:
+  - https://github.com/JakeNesler/navigatorr
+  - https://github.com/shigechika/mcp-stdio
+maintainers:
+  - name: spiegela
+dependencies:
+  - name: common
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []
