@@ -2,7 +2,7 @@ apiVersion: v2
 name: tinyauth
 description: Tinyauth is a lightweight forward-auth login server for Traefik.
 type: application
-version: 1.0.0
+version: 1.1.0
 appVersion: "5.2.0"
 sources:
   - https://github.com/tinyauthapp/tinyauth

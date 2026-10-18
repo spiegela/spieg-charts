@@ -11,12 +11,17 @@ out.
 config:
   appUrl: https://auth.example.com   # cookie is issued for .example.com
   sessionExpiry: 2592000             # 30-day sliding session
-  usersSecret: tinyauth-users        # Secret with a `users` key
+  credentialsSecret: tinyauth-credentials  # Secret with a `credentials` key
   trustedProxies: 10.42.0.0/16       # Traefik pod CIDR
 ```
 
-The `users` key holds one `username:bcrypt-hash[:totp-secret]` entry per line.
-Tinyauth reads it at startup, so restart the pod after changing it.
+The `credentials` key holds one plain-text `username:password` entry per line.
+On every pod start, the `hash-users` init container bcrypt-hashes them into an
+in-memory users file for Tinyauth, so a rebuilt cluster needs nothing beyond
+the Secret. Restart the pod after changing it. The init container skips
+entries whose password is `REPLACE_ME`, rejects passwords under 12
+characters, and fails if no usable entry remains, so Tinyauth never starts
+with a placeholder login. Keep the Secret encrypted (for example with SOPS).
 
 Browsers get redirected to the login page and receive a session cookie.
 Non-browser clients get `401` and can send `Authorization: Basic` credentials

@@ -3,6 +3,12 @@ image:
   tag: "v5.2.0@sha256:220aa235c76393a73fece831d7ba967b8698d3907fd8e3c4c952f699c7b142a5"
   pullPolicy: IfNotPresent
 
+# Only used by the init container to bcrypt-hash credentials.
+htpasswdImage:
+  repository: httpd
+  tag: "2.4-alpine@sha256:3440c39d8d6f54fa9ad2549e5a60c19ddd435faadc29c1ad28aa795f71888889"
+  pullPolicy: IfNotPresent
+
 securityContext:
   container:
     readOnlyRootFilesystem: true
@@ -26,10 +32,13 @@ config:
   # Failed logins per username before that username is locked for loginTimeout.
   loginMaxRetries: 5
   loginTimeout: 300
-  # Name of an existing Secret with a `users` key: one
-  # `username:bcrypt-hash[:totp-secret]` entry per line. Tinyauth reads it at
-  # startup, so restart the pod (or use Reloader) after changing it.
-  usersSecret: ""
+  # Name of an existing Secret with a `credentials` key: one
+  # `username:password` entry per line (blank lines and `#` comments allowed).
+  # An init container bcrypt-hashes them into Tinyauth's users file on every
+  # pod start, so restart the pod (or use Reloader) after changing it.
+  # Entries whose password is REPLACE_ME are skipped; passwords must be at
+  # least 12 characters. The pod won't start without one usable entry.
+  credentialsSecret: ""
   title: Tinyauth
   logLevel: info
 
@@ -44,6 +53,45 @@ service:
 workload:
   main:
     podSpec:
+      initContainers:
+        hash-users:
+          enabled: true
+          type: init
+          imageSelector: htpasswdImage
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              set -eu
+              out=/users/users
+              : > "$out.tmp"
+              count=0
+              while IFS= read -r line || [ -n "$line" ]; do
+                case "$line" in ''|'#'*) continue ;; esac
+                user="${line%%:*}"
+                pass="${line#*:}"
+                if [ "$user" = "$line" ] || [ -z "$user" ] || [ -z "$pass" ]; then
+                  echo "Skipping malformed credentials entry (expected username:password)"
+                  continue
+                fi
+                if [ "$pass" = "REPLACE_ME" ]; then
+                  echo "Skipping $user: password is still the REPLACE_ME placeholder"
+                  continue
+                fi
+                if [ "${#pass}" -lt 12 ]; then
+                  echo "Refusing $user: password shorter than 12 characters" >&2
+                  exit 1
+                fi
+                printf '%s\n' "$pass" | htpasswd -niBC 10 "$user" | grep -v '^$' >> "$out.tmp"
+                count=$((count + 1))
+              done < /credentials/credentials
+              if [ "$count" -eq 0 ]; then
+                echo "No usable credentials in the credentials secret; refusing to start." >&2
+                exit 1
+              fi
+              mv "$out.tmp" "$out"
+              echo "Hashed $count user(s)."
       containers:
         main:
           probes:
@@ -73,7 +121,7 @@ workload:
             TINYAUTH_AUTH_TRUSTEDPROXIES: '{{ .Values.config.trustedProxies }}'
             TINYAUTH_AUTH_LOGINMAXRETRIES: '{{ .Values.config.loginMaxRetries | int }}'
             TINYAUTH_AUTH_LOGINTIMEOUT: '{{ .Values.config.loginTimeout | int }}'
-            TINYAUTH_AUTH_USERSFILE: '{{ if .Values.config.usersSecret }}/secrets/users{{ end }}'
+            TINYAUTH_AUTH_USERSFILE: /users/users
             TINYAUTH_UI_TITLE: '{{ .Values.config.title }}'
             TINYAUTH_LOG_LEVEL: '{{ .Values.config.logLevel }}'
             TINYAUTH_LOG_STREAMS_AUDIT_ENABLED: "true"
@@ -84,13 +132,30 @@ persistence:
     enabled: true
     mountPath: /data
     readOnly: false
-  users:
-    enabled: '{{ if .Values.config.usersSecret }}true{{ end }}'
+  # Plain-text credentials, only mounted into the hashing init container.
+  credentials:
+    enabled: true
     type: secret
-    objectName: '{{ .Values.config.usersSecret }}'
+    objectName: '{{ required "config.credentialsSecret is required" .Values.config.credentialsSecret }}'
     expandObjectName: false
-    mountPath: /secrets
     readOnly: true
     items:
-      - key: users
-        path: users
+      - key: credentials
+        path: credentials
+    targetSelector:
+      main:
+        hash-users:
+          mountPath: /credentials
+  # Hashed users file, rebuilt on every start; never written to disk.
+  users:
+    enabled: true
+    type: emptyDir
+    medium: Memory
+    targetSelector:
+      main:
+        main:
+          mountPath: /users
+          readOnly: true
+        hash-users:
+          mountPath: /users
+          readOnly: false
