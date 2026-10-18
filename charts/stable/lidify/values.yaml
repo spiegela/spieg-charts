@@ -1,7 +1,7 @@
 image:
   repository: thewicklowwolf/lidify
-  tag: latest
-  pullPolicy: Always
+  tag: "0.2.11"
+  pullPolicy: IfNotPresent
 
 config:
   puid: 568

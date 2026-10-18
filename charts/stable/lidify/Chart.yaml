@@ -4,7 +4,7 @@ name: lidify
 description: Lidify is a music discovery tool that provides recommendations based on selected Lidarr artists using Last.fm.
 type: application
 version: 1.0.0
-appVersion: "latest"
+appVersion: "0.2.11"
 sources:
   - https://github.com/TheWicklowWolf/Lidify
 dependencies:
