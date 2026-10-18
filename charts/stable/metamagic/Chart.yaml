@@ -4,7 +4,7 @@ name: metamagic
 description: MetaMagic is a Plex collections, artwork, overlays, and metadata manager with a web UI.
 type: application
 version: 1.0.0
-appVersion: "latest"
+appVersion: "sha-803995e"
 sources:
   - https://github.com/drxen00/metamagic
 dependencies:

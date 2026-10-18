@@ -1,7 +1,7 @@
 image:
   repository: ghcr.io/drxen00/metamagic
-  tag: latest
-  pullPolicy: Always
+  tag: "sha-803995e@sha256:273346f2c079aaa49816a93ba864f9dcad8d78b7ce42356bbe07a3b5fe04a148"
+  pullPolicy: IfNotPresent
 
 # The upstream entrypoint starts as root to create the configured user and fix
 # /config ownership, then launches the API and web processes as that user.
