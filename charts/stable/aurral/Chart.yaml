@@ -4,7 +4,7 @@ name: aurral
 description: Aurral is a Lidarr companion for self-hosted music discovery.
 type: application
 version: 1.0.0
-appVersion: "latest"
+appVersion: v2.10.0
 sources:
   - https://github.com/lklynet/aurral
 dependencies:
