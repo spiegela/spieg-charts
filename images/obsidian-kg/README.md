@@ -1,6 +1,6 @@
 # obsidian-kg
 
-Read-only MCP server that exposes an Obsidian vault as a knowledge graph:
+MCP server that exposes an Obsidian vault as a knowledge graph:
 notes are nodes, `[[wikilinks]]` are edges, frontmatter `type` and
 `type/…` / `area/…` tags are facets.
 
@@ -17,6 +17,15 @@ notes are nodes, `[[wikilinks]]` are edges, frontmatter `type` and
   notes are re-parsed and re-embedded, and the snapshot is swapped atomically.
 - **Privacy:** folders in `KG_EXCLUDE` (default `Private`) and dot-folders are
   invisible, including as link targets.
+
+- **Writes (opt-in, `KG_WRITE_ENABLED=true`):** `kg_create`, `kg_append`,
+  `kg_edit` (exact unique replacement), `kg_update_frontmatter`, `kg_trash`
+  (moves to `.trash/`). Writes are atomic, refuse excluded/dot/out-of-vault
+  paths and duplicate note titles, honour an optional `expected_version`
+  (from `kg_read`) to avoid clobbering concurrent edits, save the previous
+  content under `KG_DATA_DIR/history/`, and append to `KG_DATA_DIR/audit.jsonl`
+  with the `Remote-User` from the auth proxy. Changes are visible to reads
+  immediately; their embeddings follow in the background.
 
 MCP endpoint: `/mcp` (streamable HTTP, stateless). Health: `/healthz`.
 There is no auth in the server itself; put it behind an authenticating proxy.
@@ -41,6 +50,8 @@ There is no auth in the server itself; put it behind an authenticating proxy.
 | `KG_VAULT` | `/vault` | vault root |
 | `KG_EXCLUDE` | `Private` | comma-separated folders to hide |
 | `KG_CACHE_DIR` | `/cache` | local vector cache |
+| `KG_WRITE_ENABLED` | `false` | register the write tools |
+| `KG_DATA_DIR` | `/data` | audit log + history (write mode) |
 | `KG_REFRESH_SECONDS` | `60` | rescan interval |
 | `KG_THREADS` | `2` | ONNX intra-op threads |
 | `KG_PORT` | `8080` | |

@@ -1,6 +1,6 @@
 image:
   repository: docker.io/spiegela/obsidian-kg-mcp
-  tag: 0.1.1
+  tag: 0.2.0
   pullPolicy: IfNotPresent
 
 config:
@@ -9,6 +9,9 @@ config:
   refreshSeconds: 60
   threads: 2
   logLevel: INFO
+  # Expose kg_create/kg_append/kg_edit/kg_update_frontmatter/kg_trash. Needs a
+  # writable vault mount and a container user that owns the vault files.
+  writeEnabled: false
 
 service:
   main:
@@ -33,6 +36,8 @@ workload:
             KG_REFRESH_SECONDS: '{{ .Values.config.refreshSeconds }}'
             KG_THREADS: '{{ .Values.config.threads }}'
             KG_LOG_LEVEL: '{{ .Values.config.logLevel }}'
+            KG_WRITE_ENABLED: '{{ .Values.config.writeEnabled }}'
+            KG_DATA_DIR: /data
           probes:
             liveness:
               type: http
@@ -51,13 +56,20 @@ workload:
               failureThreshold: 60
 
 persistence:
-  # The vault root (the folder containing .obsidian). Mounted read-only.
+  # The vault root (the folder containing .obsidian). Set readOnly: false for
+  # write mode.
   vault:
     enabled: true
     type: pvc
     size: 1Gi
     mountPath: /vault
     readOnly: true
+  # Write mode: audit.jsonl and the pre-change copy of every modified note.
+  data:
+    enabled: true
+    type: emptyDir
+    mountPath: /data
+    readOnly: false
   # Locally computed embeddings; only a cache.
   cache:
     enabled: true

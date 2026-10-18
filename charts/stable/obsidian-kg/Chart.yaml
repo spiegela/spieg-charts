@@ -2,11 +2,12 @@
 apiVersion: v2
 name: obsidian-kg
 description: >-
-  Read-only MCP server that exposes an Obsidian vault as a knowledge graph
-  (link graph, full-text and Smart Connections-compatible semantic search).
+  MCP server that exposes an Obsidian vault as a knowledge graph (link graph,
+  full-text and Smart Connections-compatible semantic search), with optional
+  guarded, audited writes.
 type: application
-version: 0.1.1
-appVersion: "0.1.1"
+version: 0.2.0
+appVersion: "0.2.0"
 keywords:
   - mcp
   - obsidian

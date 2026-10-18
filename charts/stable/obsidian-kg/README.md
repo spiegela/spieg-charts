@@ -1,6 +1,6 @@
 # obsidian-kg
 
-TrueCharts-style chart for the read-only Obsidian knowledge-graph MCP server
+TrueCharts-style chart for the Obsidian knowledge-graph MCP server
 built from [`images/obsidian-kg`](../../../images/obsidian-kg). Agents get
 graph-aware tools (`kg_overview`, `kg_search`, `kg_read`, `kg_neighbors`,
 `kg_path`, `kg_similar`, `kg_list`, `kg_tags`) over streamable HTTP at `/mcp`.
@@ -49,5 +49,7 @@ Clients then send `Authorization: Basic base64(<user>:<token>)` to
 | `config.exclude` | `Private` | comma-separated folders hidden from agents |
 | `config.refreshSeconds` | `60` | vault rescan interval |
 | `config.threads` | `2` | ONNX threads for embedding |
+| `config.writeEnabled` | `false` | add the write tools (needs a writable vault and a matching `securityContext.container.runAsUser`) |
 | `persistence.vault` | pvc, read-only | the vault root |
+| `persistence.data` | emptyDir | write audit log + pre-change history; use persistent storage in write mode |
 | `persistence.cache` | emptyDir | locally computed embeddings |

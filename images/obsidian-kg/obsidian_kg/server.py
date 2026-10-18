@@ -10,12 +10,14 @@ import threading
 import time
 from collections import Counter
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import Context, FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from .embed import Embeddings
 from .vault import Graph, build_notes, plain, walk_vault
+from .writes import (WriteError, Writer, append_text, links_in, replace_text, update_frontmatter,
+                     version_of)
 
 log = logging.getLogger("obsidian_kg")
 
@@ -36,6 +38,18 @@ How to navigate:
 Cite notes by their `path`. Notes can be referenced by path, title or alias.
 """
 
+WRITE_INSTRUCTIONS = """
+Writing (when kg_create/kg_append/kg_edit/kg_update_frontmatter/kg_trash are present):
+- Read before you change: kg_read returns `version`; pass it as expected_version to
+  kg_edit/kg_update_frontmatter/kg_trash so you never overwrite a concurrent edit.
+- Prefer kg_append and small kg_edit replacements over rewriting notes.
+- Link with [[Note Title]] using existing titles (check with kg_search); results list any
+  links that don't resolve yet.
+- Follow the vault's conventions: frontmatter `type` (topic/entity/project/...), one
+  `area/...` tag, a few subject tags; new loose notes go in `00 Inbox/`.
+- Every change keeps the previous version server-side; kg_trash moves to .trash/.
+"""
+
 
 class KG:
     def __init__(self, vault: str, exclude: list[str], model_dir: str, refresh: int, threads: int,
@@ -46,22 +60,35 @@ class KG:
         self.graph = Graph({})
         self.built_at = 0.0
         self.lock = threading.Lock()
+        self.emb_lock = threading.Lock()
+        self.wake = threading.Event()
         self.rebuild(embed=False)
         threading.Thread(target=self._loop, daemon=True, name="kg-refresh").start()
 
-    def rebuild(self, embed: bool = True) -> bool:
+    def refresh_graph(self) -> bool:
+        """Re-scan files and swap in a new graph snapshot (no embedding)."""
         with self.lock:
             files = walk_vault(self.vault, self.exclude)
-            changed = files != self.files
-            if changed:
-                t0 = time.time()
-                notes = build_notes(self.vault, files, self.graph.notes)
-                self.graph = Graph(notes)
-                self.files = files
-                self.built_at = time.time()
-                log.info("graph: %d notes in %.1fs", len(notes), time.time() - t0)
+            if files == self.files:
+                return False
+            t0 = time.time()
+            notes = build_notes(self.vault, files, self.graph.notes)
+            self.graph = Graph(notes)
+            self.files = files
+            self.built_at = time.time()
+            log.info("graph: %d notes in %.1fs", len(notes), time.time() - t0)
+            return True
+
+    def rebuild(self, embed: bool = True) -> bool:
+        changed = self.refresh_graph()
+        with self.emb_lock:
             self.emb.build(self.graph, embed_missing=embed)
-            return changed
+        return changed
+
+    def after_write(self) -> None:
+        """Make a write visible to reads immediately; embed it in the background."""
+        self.refresh_graph()
+        self.wake.set()
 
     def _loop(self):
         while True:
@@ -69,7 +96,8 @@ class KG:
                 self.rebuild(embed=True)
             except Exception:  # keep serving the last good snapshot
                 log.exception("refresh failed")
-            time.sleep(self.refresh)
+            self.wake.wait(self.refresh)
+            self.wake.clear()
 
     # ---- presentation -------------------------------------------------------
     def card(self, p: str, **extra) -> dict:
@@ -128,9 +156,18 @@ def compact(fn):
     return wrapper
 
 
-def create_app(kg: KG, host: str, port: int) -> FastMCP:
-    mcp = FastMCP("obsidian-kg", instructions=INSTRUCTIONS, host=host, port=port,
-                  stateless_http=True, json_response=True)
+def actor_of(ctx: Context | None) -> str | None:
+    """The authenticated user Tinyauth forwards in Remote-User, for the audit log."""
+    try:
+        req = ctx.request_context.request  # type: ignore[union-attr]
+        return req.headers.get("remote-user") if req is not None else None
+    except Exception:
+        return None
+
+
+def create_app(kg: KG, host: str, port: int, writer: Writer | None = None) -> FastMCP:
+    mcp = FastMCP("obsidian-kg", instructions=INSTRUCTIONS + (WRITE_INSTRUCTIONS if writer else ""),
+                  host=host, port=port, stateless_http=True, json_response=True)
     _tool = mcp.tool
 
     def tool():
@@ -218,7 +255,9 @@ def create_app(kg: KG, host: str, port: int) -> FastMCP:
         chunk = body[offset:offset + max_chars]
         incoming = g.incoming.get(p, [])
         res = {
-            "path": p, "title": n.title, "frontmatter": n.frontmatter,
+            "path": p, "title": n.title, "version": version_of(
+                open(os.path.join(kg.vault, p), encoding="utf-8", errors="replace").read()),
+            "frontmatter": n.frontmatter,
             "section": heading,
             "content": chunk,
             "chars": {"offset": offset, "returned": len(chunk), "total": len(body)},
@@ -341,7 +380,109 @@ def create_app(kg: KG, host: str, port: int) -> FastMCP:
                  if not prefix or t.lower().startswith(prefix.lower().lstrip("#"))]
         return {"total": len(items), "tags": dict(items[:max(1, min(limit, 1000))])}
 
+    if writer is not None:
+        register_write_tools(mcp, kg, writer)
     return mcp
+
+
+def register_write_tools(mcp: FastMCP, kg: KG, writer: Writer) -> None:
+    def unresolved(text: str) -> list[str]:
+        return [t for t in links_in(text) if kg.graph.resolve_link(t) is None][:30]
+
+    def existing(note: str) -> str:
+        try:
+            return kg.resolve(note)
+        except ValueError:
+            # Not in the snapshot yet (e.g. just created): accept a literal path.
+            p = writer.check_path(note)
+            if os.path.exists(writer.full(p)):
+                return p
+            raise
+
+    def run(fn):
+        try:
+            return fn()
+        except WriteError as e:
+            raise ValueError(str(e)) from None
+
+    @mcp.tool()
+    def kg_create(path: str, content: str, frontmatter: dict | None = None,
+                  allow_duplicate_name: bool = False, ctx: Context | None = None) -> dict:
+        """Create a new note. `path` is vault-relative (".md" optional), e.g.
+        "Tech/Homelab/My Topic". Fails if it exists. `frontmatter` is a dict (e.g.
+        {"type": "topic", "tags": ["area/homelab", "k3s"]}). Refuses a title another note
+        already uses (Obsidian links by title) unless allow_duplicate_name=True."""
+        def go():
+            rel = writer.check_path(path)
+            title = os.path.basename(rel)[:-3].lower()
+            if not allow_duplicate_name and kg.graph.by_name.get(title):
+                raise WriteError(f"A note titled '{os.path.basename(rel)[:-3]}' already exists: "
+                                 f"{kg.graph.by_name[title][:5]}. Edit it instead, or pass "
+                                 "allow_duplicate_name=True.")
+            res = writer.create(rel, content, frontmatter, actor_of(ctx))
+            kg.after_write()
+            res["unresolved_links"] = unresolved(content)
+            return res
+        return run(go)
+
+    @mcp.tool()
+    def kg_append(note: str, content: str, section: str | None = None,
+                  ctx: Context | None = None) -> dict:
+        """Append markdown to a note: at the end, or at the end of the section under
+        heading `section`. Safe without a version check (nothing is overwritten)."""
+        def go():
+            p = existing(note)
+            res = writer.modify(p, lambda old: append_text(old, content, section), "append",
+                                None, actor_of(ctx), {"section": section})
+            kg.after_write()
+            res["unresolved_links"] = unresolved(content)
+            return res
+        return run(go)
+
+    @mcp.tool()
+    def kg_edit(note: str, old_text: str, new_text: str, replace_all: bool = False,
+                expected_version: str | None = None, ctx: Context | None = None) -> dict:
+        """Replace exact text in a note (whole file, frontmatter included). old_text must
+        occur exactly once unless replace_all=True. Pass expected_version from kg_read."""
+        def go():
+            p = existing(note)
+            res = writer.modify(p, lambda old: replace_text(old, old_text, new_text,
+                                                            0 if replace_all else 1),
+                                "edit", expected_version, actor_of(ctx))
+            kg.after_write()
+            res["unresolved_links"] = unresolved(new_text)
+            return res
+        return run(go)
+
+    @mcp.tool()
+    def kg_update_frontmatter(note: str, updates: dict | None = None,
+                              remove: list[str] | None = None,
+                              expected_version: str | None = None,
+                              ctx: Context | None = None) -> dict:
+        """Set (`updates`, replaces whole values, e.g. the full tags list) and/or delete
+        (`remove`) frontmatter keys. Pass expected_version from kg_read."""
+        def go():
+            p = existing(note)
+            res = writer.modify(p, lambda old: update_frontmatter(old, updates, remove),
+                                "frontmatter", expected_version, actor_of(ctx),
+                                {"keys": sorted(list((updates or {}).keys()) + list(remove or []))})
+            kg.after_write()
+            return res
+        return run(go)
+
+    @mcp.tool()
+    def kg_trash(note: str, expected_version: str | None = None,
+                 ctx: Context | None = None) -> dict:
+        """Move a note to the vault's .trash/ (recoverable). Reports backlinks that will
+        now dangle; fix or remove them afterwards."""
+        def go():
+            p = existing(note)
+            backlinks = [kg.graph.notes[x].path for x in kg.graph.incoming.get(p, [])]
+            res = writer.trash(p, expected_version, actor_of(ctx))
+            kg.after_write()
+            res["dangling_backlinks_from"] = backlinks[:50]
+            return res
+        return run(go)
 
 
 def main():
@@ -353,14 +494,21 @@ def main():
     ap.add_argument("--refresh", type=int, default=int(os.environ.get("KG_REFRESH_SECONDS", "60")))
     ap.add_argument("--threads", type=int, default=int(os.environ.get("KG_THREADS", "2")))
     ap.add_argument("--cache-dir", default=os.environ.get("KG_CACHE_DIR", "/cache"))
+    ap.add_argument("--write", action="store_true",
+                    default=os.environ.get("KG_WRITE_ENABLED", "").lower() in ("1", "true", "yes"))
+    ap.add_argument("--data-dir", default=os.environ.get("KG_DATA_DIR", "/data"),
+                    help="audit log and pre-change history (write mode)")
     ap.add_argument("--host", default=os.environ.get("KG_HOST", "0.0.0.0"))
     ap.add_argument("--port", type=int, default=int(os.environ.get("KG_PORT", "8080")))
     args = ap.parse_args()
     logging.basicConfig(level=os.environ.get("KG_LOG_LEVEL", "INFO"),
                         format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-    kg = KG(args.vault, [e for e in args.exclude.split(",") if e.strip()], args.model_dir,
+    exclude = [e for e in args.exclude.split(",") if e.strip()]
+    kg = KG(args.vault, exclude, args.model_dir,
             args.refresh, args.threads, args.cache_dir)
-    create_app(kg, args.host, args.port).run(transport="streamable-http")
+    writer = Writer(args.vault, exclude, args.data_dir) if args.write else None
+    log.info("write tools %s", "enabled" if writer else "disabled")
+    create_app(kg, args.host, args.port, writer).run(transport="streamable-http")
 
 
 if __name__ == "__main__":
