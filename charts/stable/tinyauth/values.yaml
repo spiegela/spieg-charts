@@ -1,0 +1,96 @@
+image:
+  repository: ghcr.io/tinyauthapp/tinyauth
+  tag: "v5.2.0@sha256:220aa235c76393a73fece831d7ba967b8698d3907fd8e3c4c952f699c7b142a5"
+  pullPolicy: IfNotPresent
+
+securityContext:
+  container:
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 568
+    runAsGroup: 568
+
+config:
+  # Public URL of the Tinyauth login page. The session cookie is issued for the
+  # parent domain of this URL (auth.example.com -> .example.com), so every app
+  # protected by this instance must live under that parent domain.
+  appUrl: ""
+  # Sliding session lifetime in seconds. Active sessions are extended
+  # automatically, so this is effectively the idle timeout. Default: 30 days.
+  sessionExpiry: 2592000
+  # Absolute session lifetime in seconds, regardless of activity. 0 disables it.
+  sessionMaxLifetime: 0
+  secureCookie: true
+  # Comma-separated proxy CIDRs whose X-Forwarded-For headers are trusted.
+  trustedProxies: ""
+  # Failed logins per username before that username is locked for loginTimeout.
+  loginMaxRetries: 5
+  loginTimeout: 300
+  # Name of an existing Secret with a `users` key: one
+  # `username:bcrypt-hash[:totp-secret]` entry per line. Tinyauth reads it at
+  # startup, so restart the pod (or use Reloader) after changing it.
+  usersSecret: ""
+  title: Tinyauth
+  logLevel: info
+
+service:
+  main:
+    ports:
+      main:
+        protocol: http
+        port: 3000
+        targetPort: 3000
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          probes:
+            liveness:
+              type: http
+              path: /api/healthz
+              port: 3000
+            readiness:
+              type: http
+              path: /api/healthz
+              port: 3000
+            startup:
+              type: http
+              path: /api/healthz
+              port: 3000
+          env:
+            TINYAUTH_APPURL: '{{ required "config.appUrl is required" .Values.config.appUrl }}'
+            TINYAUTH_LABELPROVIDER: none
+            TINYAUTH_ANALYTICS_ENABLED: "false"
+            TINYAUTH_RESOURCES_ENABLED: "false"
+            TINYAUTH_DATABASE_PATH: /data/tinyauth.db
+            TINYAUTH_OIDC_PRIVATEKEYPATH: /data/oidc/key.pem
+            TINYAUTH_OIDC_PUBLICKEYPATH: /data/oidc/key.pub
+            TINYAUTH_AUTH_SESSIONEXPIRY: '{{ .Values.config.sessionExpiry | int }}'
+            TINYAUTH_AUTH_SESSIONMAXLIFETIME: '{{ .Values.config.sessionMaxLifetime | int }}'
+            TINYAUTH_AUTH_SECURECOOKIE: '{{ .Values.config.secureCookie }}'
+            TINYAUTH_AUTH_TRUSTEDPROXIES: '{{ .Values.config.trustedProxies }}'
+            TINYAUTH_AUTH_LOGINMAXRETRIES: '{{ .Values.config.loginMaxRetries | int }}'
+            TINYAUTH_AUTH_LOGINTIMEOUT: '{{ .Values.config.loginTimeout | int }}'
+            TINYAUTH_AUTH_USERSFILE: '{{ if .Values.config.usersSecret }}/secrets/users{{ end }}'
+            TINYAUTH_UI_TITLE: '{{ .Values.config.title }}'
+            TINYAUTH_LOG_LEVEL: '{{ .Values.config.logLevel }}'
+            TINYAUTH_LOG_STREAMS_AUDIT_ENABLED: "true"
+
+persistence:
+  # Holds the SQLite session store. Persist it so restarts don't log users out.
+  data:
+    enabled: true
+    mountPath: /data
+    readOnly: false
+  users:
+    enabled: '{{ if .Values.config.usersSecret }}true{{ end }}'
+    type: secret
+    objectName: '{{ .Values.config.usersSecret }}'
+    expandObjectName: false
+    mountPath: /secrets
+    readOnly: true
+    items:
+      - key: users
+        path: users
