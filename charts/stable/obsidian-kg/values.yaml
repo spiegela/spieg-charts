@@ -1,6 +1,6 @@
 image:
   repository: docker.io/spiegela/obsidian-kg-mcp
-  tag: 0.1.0
+  tag: 0.1.1
   pullPolicy: IfNotPresent
 
 config:
@@ -88,7 +88,7 @@ securityContext:
 resources:
   requests:
     cpu: 50m
-    memory: 256Mi
+    memory: 384Mi
   limits:
     memory: 1Gi
 

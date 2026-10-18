@@ -5,8 +5,10 @@ FROM python:3.12-slim-bookworm
 ARG MODEL_REPO=TaylorAI/bge-micro-v2
 ARG MODEL_REVISION=3edf6d7de0faa426b09780416fe61009f26ae589
 
+# Few malloc arenas: ONNX Runtime's worker threads otherwise each pin freed heap.
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    MALLOC_ARENA_MAX=2 \
     KG_VAULT=/vault \
     KG_MODEL_DIR=/opt/model \
     KG_CACHE_DIR=/cache \
