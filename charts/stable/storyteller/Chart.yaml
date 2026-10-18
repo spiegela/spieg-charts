@@ -4,7 +4,7 @@ name: storyteller
 description: Storyteller is a self-hosted platform for creating and reading ebooks with synced narration.
 type: application
 version: 1.0.0
-appVersion: "latest"
+appVersion: "latest@sha256:1ae16005572519f56abac2d65ab879d20115cd257fde7e89cf739ea82aed4de3"
 sources:
   - https://github.com/smoores-dev/storyteller
   - https://gitlab.com/storyteller-platform/storyteller

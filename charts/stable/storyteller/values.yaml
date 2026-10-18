@@ -1,7 +1,7 @@
 image:
   repository: registry.gitlab.com/storyteller-platform/storyteller
-  tag: latest
-  pullPolicy: Always
+  tag: "latest@sha256:1ae16005572519f56abac2d65ab879d20115cd257fde7e89cf739ea82aed4de3"
+  pullPolicy: IfNotPresent
 
 config:
   secretKey: ""
