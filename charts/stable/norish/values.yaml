@@ -1,12 +1,12 @@
 image:
   repository: norishapp/norish
-  tag: latest
-  pullPolicy: Always
+  tag: "v0.25.1-beta"
+  pullPolicy: IfNotPresent
 
 chromeImage:
   repository: zenika/alpine-chrome
-  tag: latest
-  pullPolicy: Always
+  tag: "124"
+  pullPolicy: IfNotPresent
 
 securityContext:
   container:
