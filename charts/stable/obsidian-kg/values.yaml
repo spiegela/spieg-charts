@@ -1,0 +1,100 @@
+image:
+  repository: docker.io/spiegela/obsidian-kg-mcp
+  tag: 0.1.0
+  pullPolicy: IfNotPresent
+
+config:
+  # Comma-separated vault folders hidden from agents (also as link targets).
+  exclude: Private
+  refreshSeconds: 60
+  threads: 2
+  logLevel: INFO
+
+service:
+  main:
+    ports:
+      main:
+        protocol: http
+        port: 8080
+        targetPort: 8080
+
+workload:
+  main:
+    replicas: 1
+    strategy: Recreate
+    podSpec:
+      containers:
+        main:
+          env:
+            KG_VAULT: /vault
+            KG_CACHE_DIR: /cache
+            KG_PORT: "8080"
+            KG_EXCLUDE: '{{ .Values.config.exclude }}'
+            KG_REFRESH_SECONDS: '{{ .Values.config.refreshSeconds }}'
+            KG_THREADS: '{{ .Values.config.threads }}'
+            KG_LOG_LEVEL: '{{ .Values.config.logLevel }}'
+          probes:
+            liveness:
+              type: http
+              path: /healthz
+              port: 8080
+            readiness:
+              type: http
+              path: /healthz
+              port: 8080
+            startup:
+              type: http
+              path: /healthz
+              port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+              failureThreshold: 60
+
+persistence:
+  # The vault root (the folder containing .obsidian). Mounted read-only.
+  vault:
+    enabled: true
+    type: pvc
+    size: 1Gi
+    mountPath: /vault
+    readOnly: true
+  # Locally computed embeddings; only a cache.
+  cache:
+    enabled: true
+    type: emptyDir
+    mountPath: /cache
+    readOnly: false
+
+ingress:
+  main:
+    enabled: false
+    hosts: []
+    tls: []
+
+securityContext:
+  container:
+    runAsUser: 10001
+    runAsGroup: 10001
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      add: []
+      drop:
+        - ALL
+  pod:
+    fsGroup: 10001
+    fsGroupChangePolicy: OnRootMismatch
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 256Mi
+  limits:
+    memory: 1Gi
+
+notes:
+  custom: |-
+    ## MCP endpoint
+    obsidian-kg serves MCP (streamable HTTP) at /mcp and health at /healthz.
+    It has no authentication of its own: expose it only behind an
+    authenticating proxy (e.g. a Traefik forward-auth middleware).

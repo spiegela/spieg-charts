@@ -1,0 +1,25 @@
+---
+apiVersion: v2
+name: obsidian-kg
+description: >-
+  Read-only MCP server that exposes an Obsidian vault as a knowledge graph
+  (link graph, full-text and Smart Connections-compatible semantic search).
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - mcp
+  - obsidian
+  - knowledge-graph
+sources:
+  - https://github.com/spiegela/spieg-truenas-charts/tree/main/images/obsidian-kg
+maintainers:
+  - name: spiegela
+dependencies:
+  - name: common
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []
