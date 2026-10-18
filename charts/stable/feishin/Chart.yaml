@@ -4,7 +4,7 @@ name: feishin
 description: Feishin is a modern self-hosted music player for Jellyfin, Navidrome, and Subsonic-compatible servers.
 type: application
 version: 1.0.0
-appVersion: "latest"
+appVersion: "1.17.0"
 sources:
   - https://github.com/jeffvli/feishin
   - https://github.com/lux032/feishin

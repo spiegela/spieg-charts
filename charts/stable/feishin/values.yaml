@@ -1,7 +1,7 @@
 image:
   repository: ghcr.io/jeffvli/feishin
-  tag: latest
-  pullPolicy: Always
+  tag: "1.17.0"
+  pullPolicy: IfNotPresent
 
 config:
   server:
