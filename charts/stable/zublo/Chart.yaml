@@ -4,7 +4,7 @@ name: zublo
 description: Zublo is a self-hosted personal subscription tracker backed by PocketBase.
 type: application
 version: 1.0.0
-appVersion: "0.1.0"
+appVersion: "0.6.0"
 sources:
   - https://github.com/danielalves96/zublo
 dependencies:

@@ -1,7 +1,7 @@
 image:
   repository: ghcr.io/danielalves96/zublo
-  tag: latest
-  pullPolicy: Always
+  tag: "0.6.0"
+  pullPolicy: IfNotPresent
 
 config:
   pbEncryptionKey: ""
