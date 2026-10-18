@@ -27,8 +27,8 @@ settings:
 
 image:
   repository: ghcr.io/kamilkosek/jellyplist
-  tag: latest
-  pullPolicy: Always
+  tag: "v0.1.10"
+  pullPolicy: IfNotPresent
 
 workload:
   main:
