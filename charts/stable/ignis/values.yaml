@@ -1,7 +1,7 @@
 image:
   repository: nobbe/ignis
-  tag: latest
-  pullPolicy: Always
+  tag: "0.8.18"
+  pullPolicy: IfNotPresent
 
 # Ignis's entrypoint creates the requested user and fixes the ownership of all
 # persisted paths before dropping privileges to PUID/PGID.
