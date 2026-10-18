@@ -4,7 +4,7 @@ name: tubearchivist
 description: Tube Archivist indexes, downloads, and serves a self-hosted YouTube media archive.
 type: application
 version: 1.0.0
-appVersion: "latest"
+appVersion: "v0.5.12"
 sources:
   - https://github.com/tubearchivist/tubearchivist
 dependencies:
