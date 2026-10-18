@@ -4,7 +4,7 @@ name: shelfarr
 description: Shelfarr is a self-hosted ebook and audiobook management system.
 type: application
 version: 1.0.0
-appVersion: "latest"
+appVersion: "2026.10.12.1"
 sources:
   - https://github.com/Pedro-Revez-Silva/shelfarr
 dependencies:

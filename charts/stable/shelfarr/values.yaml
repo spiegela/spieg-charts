@@ -1,7 +1,7 @@
 image:
   repository: ghcr.io/pedro-revez-silva/shelfarr
-  tag: latest
-  pullPolicy: Always
+  tag: "2026.10.12.1"
+  pullPolicy: IfNotPresent
 
 config:
   puid: 568
