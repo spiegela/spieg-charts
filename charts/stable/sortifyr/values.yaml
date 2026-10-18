@@ -1,7 +1,7 @@
 image:
   repository: ghcr.io/topvennie/sortifyr
-  tag: latest
-  pullPolicy: Always
+  tag: "v.0.2.2"
+  pullPolicy: IfNotPresent
 
 config:
   appEnv: production
