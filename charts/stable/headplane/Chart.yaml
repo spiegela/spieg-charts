@@ -1,0 +1,26 @@
+---
+apiVersion: v2
+name: headplane
+description: >-
+  Web UI for Headscale, modeled on Tailscale's admin console: machines, routes,
+  users, auth keys, ACLs and DNS.
+type: application
+version: 0.1.0
+appVersion: "0.8.1"
+keywords:
+  - headscale
+  - headplane
+  - tailscale
+home: https://headplane.net
+sources:
+  - https://github.com/tale/headplane
+maintainers:
+  - name: spiegela
+dependencies:
+  - name: common
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []

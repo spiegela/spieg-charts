@@ -1,0 +1,18 @@
+{{/* Make sure all variables are set properly */}}
+{{- include "tc.v1.common.loader.init" . }}
+
+{{- if ne (int .Values.workload.main.replicas) 1 }}
+  {{- fail "headplane keeps its accounts in a local SQLite database; run exactly one replica" }}
+{{- end }}
+{{- if not .Values.headplane.headscaleUrl }}
+  {{- fail "headplane.headscaleUrl is required (how Headplane reaches Headscale's API)" }}
+{{- end }}
+{{- if not .Values.headplane.baseUrl }}
+  {{- fail "headplane.baseUrl is required (the public URL of Headplane)" }}
+{{- end }}
+{{- if ne (len .Values.headplane.cookieSecret) 32 }}
+  {{- fail "headplane.cookieSecret must be exactly 32 characters (e.g. `openssl rand -hex 16`)" }}
+{{- end }}
+
+{{/* Render the templates */}}
+{{ include "tc.v1.common.loader.apply" . }}
