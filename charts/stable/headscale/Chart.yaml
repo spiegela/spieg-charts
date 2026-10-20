@@ -1,0 +1,27 @@
+---
+apiVersion: v2
+name: headscale
+description: >-
+  Self-hosted implementation of the Tailscale control server, with the embedded
+  DERP relay and STUN server.
+type: application
+version: 0.1.0
+appVersion: "0.29.5"
+keywords:
+  - headscale
+  - tailscale
+  - wireguard
+  - vpn
+home: https://headscale.net
+sources:
+  - https://github.com/juanfont/headscale
+maintainers:
+  - name: spiegela
+dependencies:
+  - name: common
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []

@@ -1,0 +1,123 @@
+image:
+  repository: ghcr.io/tale/headplane
+  tag: 0.8.1
+  pullPolicy: IfNotPresent
+
+headplane:
+  # REQUIRED: how Headplane reaches Headscale's API, e.g. the in-cluster
+  # service http://headscale.<ns>.svc.cluster.local:8080
+  headscaleUrl: ""
+  # REQUIRED: the public URL of Headplane (scheme + host, no /admin).
+  baseUrl: ""
+  # REQUIRED: exactly 32 characters, e.g. `openssl rand -hex 16`.
+  cookieSecret: ""
+  # Session lifetime in seconds.
+  cookieMaxAge: 86400
+  # Path to Headscale's config.yaml inside this container. Set when
+  # persistence.headscaleconfig mounts it; DNS settings are then shown
+  # (read-only when the mount is read-only). Empty = not shown.
+  headscaleConfigPath: ""
+
+secret:
+  cookie:
+    enabled: true
+    data:
+      cookie-secret: '{{ .Values.headplane.cookieSecret }}'
+
+service:
+  main:
+    ports:
+      main:
+        protocol: http
+        port: 3000
+        targetPort: 3000
+
+workload:
+  main:
+    replicas: 1
+    strategy: Recreate
+    podSpec:
+      containers:
+        main:
+          env:
+            HEADPLANE_SERVER__HOST: 0.0.0.0
+            HEADPLANE_SERVER__PORT: "3000"
+            HEADPLANE_SERVER__BASE_URL: '{{ .Values.headplane.baseUrl }}'
+            HEADPLANE_SERVER__COOKIE_SECURE: "true"
+            HEADPLANE_SERVER__COOKIE_MAX_AGE: '{{ .Values.headplane.cookieMaxAge }}'
+            HEADPLANE_SERVER__DATA_PATH: /var/lib/headplane
+            HEADPLANE_HEADSCALE__URL: '{{ .Values.headplane.headscaleUrl }}'
+            HEADPLANE_HEADSCALE__CONFIG_PATH: '{{ .Values.headplane.headscaleConfigPath }}'
+            HEADPLANE_SERVER__COOKIE_SECRET:
+              secretKeyRef:
+                name: cookie
+                key: cookie-secret
+          probes:
+            liveness:
+              type: http
+              path: /admin/healthz
+              port: 3000
+            readiness:
+              type: http
+              path: /admin/healthz
+              port: 3000
+            startup:
+              type: http
+              path: /admin/healthz
+              port: 3000
+              initialDelaySeconds: 5
+              periodSeconds: 5
+              failureThreshold: 60
+
+persistence:
+  # Headplane's own SQLite database (accounts, roles, agent data).
+  data:
+    enabled: true
+    type: pvc
+    size: 1Gi
+    mountPath: /var/lib/headplane
+    readOnly: false
+  # Optional: Headscale's config.yaml, e.g. its ConfigMap from the same
+  # namespace (objectName = that ConfigMap's full name, expandObjectName: false).
+  headscaleconfig:
+    enabled: false
+    type: configmap
+    objectName: ""
+    expandObjectName: false
+    mountPath: /etc/headscale
+    readOnly: true
+
+ingress:
+  main:
+    enabled: false
+    hosts: []
+    tls: []
+
+securityContext:
+  container:
+    runAsUser: 568
+    runAsGroup: 568
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      add: []
+      drop:
+        - ALL
+  pod:
+    fsGroup: 568
+    fsGroupChangePolicy: OnRootMismatch
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 128Mi
+  limits:
+    memory: 512Mi
+
+notes:
+  custom: |-
+    ## Headplane
+    UI: {{ .Values.headplane.baseUrl }}/admin
+
+    Sign in with a Headscale API key:
+      kubectl -n <headscale-ns> exec deploy/headscale -- headscale apikeys create --expiration 90d

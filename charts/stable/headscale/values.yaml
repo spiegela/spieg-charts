@@ -1,0 +1,212 @@
+image:
+  repository: docker.io/headscale/headscale
+  tag: 0.29.5
+  pullPolicy: IfNotPresent
+
+headscale:
+  # Rendered verbatim to /etc/headscale/config.yaml. Reference:
+  # https://github.com/juanfont/headscale/blob/v0.29.5/config-example.yaml
+  config:
+    # REQUIRED: the public HTTPS URL clients use (the ingress hostname). The
+    # embedded DERP region advertises this hostname too.
+    server_url: ""
+    listen_addr: 0.0.0.0:8080
+    metrics_listen_addr: 0.0.0.0:9090
+    # gRPC (remote CLI) stays on loopback; use `kubectl exec ... headscale` instead.
+    grpc_listen_addr: 127.0.0.1:50443
+    grpc_allow_insecure: false
+    # Source IPs of the reverse proxy, so headscale logs real client addresses.
+    trusted_proxies: []
+    noise:
+      private_key_path: /var/lib/headscale/noise_private.key
+    prefixes:
+      v4: 100.64.0.0/10
+      v6: fd7a:115c:a1e0::/48
+      allocation: sequential
+    derp:
+      server:
+        enabled: true
+        region_id: 999
+        region_code: headscale
+        region_name: Headscale Embedded DERP
+        verify_clients: true
+        # Must match service.stun.ports.stun.port. Clients learn this port from
+        # the DERP map, so a non-default port works.
+        stun_listen_addr: 0.0.0.0:3478
+        private_key_path: /var/lib/headscale/derp_server_private.key
+        automatically_add_embedded_derp_region: true
+      # Additional DERP maps (fallback relays). Empty = embedded relay only.
+      urls: []
+      paths: []
+      auto_update_enabled: true
+      update_frequency: 3h
+    disable_check_updates: true
+    node:
+      expiry: 0
+      ephemeral:
+        inactivity_timeout: 30m
+    database:
+      type: sqlite
+      sqlite:
+        path: /var/lib/headscale/db.sqlite
+        write_ahead_log: true
+        wal_autocheckpoint: 1000
+    # TLS is terminated by the ingress.
+    tls_cert_path: ""
+    tls_key_path: ""
+    log:
+      level: info
+      format: text
+    policy:
+      mode: file
+      path: /etc/headscale/policy.hujson
+    dns:
+      magic_dns: true
+      # Must differ from server_url's hostname and must not contain it.
+      base_domain: tailnet.internal
+      override_local_dns: false
+      nameservers:
+        global: []
+        split: {}
+      search_domains: []
+      extra_records: []
+    unix_socket: /var/run/headscale/headscale.sock
+    unix_socket_permission: "0770"
+    logtail:
+      enabled: false
+    taildrop:
+      enabled: true
+
+  # Rendered as JSON to /etc/headscale/policy.hujson. Default: every node may
+  # reach every other node (Tailscale's default policy). Reference:
+  # https://github.com/juanfont/headscale/blob/v0.29.5/docs/ref/policy.md
+  policy:
+    grants:
+      - src: ["*"]
+        dst: ["*"]
+        ip: ["*"]
+
+configmap:
+  config:
+    enabled: true
+    data:
+      # Single-line JSON on purpose: the common library tpl's the data after
+      # serializing it to YAML, which folds multi-line output. JSON is valid YAML,
+      # so headscale reads config.yaml unchanged.
+      config.yaml: '{{ toJson .Values.headscale.config }}'
+      policy.hujson: '{{ toJson .Values.headscale.policy }}'
+
+service:
+  main:
+    ports:
+      main:
+        protocol: http
+        port: 8080
+        targetPort: 8080
+  metrics:
+    enabled: true
+    ports:
+      metrics:
+        enabled: true
+        protocol: http
+        port: 9090
+        targetPort: 9090
+  # STUN for the embedded DERP relay. Usually a LoadBalancer reachable from the
+  # internet (UDP port forward), so clients behind NAT can discover their
+  # public endpoint.
+  stun:
+    enabled: true
+    type: LoadBalancer
+    ports:
+      stun:
+        enabled: true
+        protocol: udp
+        port: 3478
+        targetPort: 3478
+
+workload:
+  main:
+    replicas: 1
+    strategy: Recreate
+    podSpec:
+      containers:
+        main:
+          args:
+            - serve
+          probes:
+            liveness:
+              type: http
+              path: /health
+              port: 8080
+            readiness:
+              type: http
+              path: /health
+              port: 8080
+            startup:
+              type: http
+              path: /health
+              port: 8080
+              initialDelaySeconds: 5
+              periodSeconds: 5
+              failureThreshold: 60
+
+persistence:
+  config:
+    enabled: true
+    type: configmap
+    objectName: config
+    mountPath: /etc/headscale
+    readOnly: true
+  # SQLite database, noise and DERP private keys. Back this up: losing it
+  # forces every device to re-register.
+  data:
+    enabled: true
+    type: pvc
+    size: 1Gi
+    mountPath: /var/lib/headscale
+    readOnly: false
+  # Unix socket for the local `headscale` CLI (kubectl exec).
+  varrun:
+    enabled: true
+    type: emptyDir
+    mountPath: /var/run/headscale
+    readOnly: false
+
+ingress:
+  main:
+    enabled: false
+    hosts: []
+    tls: []
+
+securityContext:
+  container:
+    runAsUser: 568
+    runAsGroup: 568
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      add: []
+      drop:
+        - ALL
+  pod:
+    fsGroup: 568
+    fsGroupChangePolicy: OnRootMismatch
+
+resources:
+  requests:
+    cpu: 25m
+    memory: 64Mi
+  limits:
+    memory: 512Mi
+
+notes:
+  custom: |-
+    ## Headscale
+    Control server: {{ .Values.headscale.config.server_url }}
+
+    Manage users, keys and nodes with the bundled CLI, e.g.:
+      kubectl -n {{ .Release.Namespace }} exec deploy/{{ include "tc.v1.common.lib.chart.names.fullname" . }} -- headscale users list
+
+    Expose the main port through an ingress at server_url (it must support
+    HTTP Upgrade/WebSockets), and forward UDP to the stun service for the
+    embedded DERP relay.
