@@ -1,7 +1,7 @@
 image:
   repository: jertel/vuegraf
   pullPolicy: IfNotPresent
-  tag: 1.6.1
+  tag: 1.10.1
 
 influxdb:
   url: http://influxdb2.ix-influxdb2.svc.cluster.local
