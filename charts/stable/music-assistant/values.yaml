@@ -11,13 +11,20 @@ alexaSkill:
 config:
   server:
     hostname:
+    # -- Public HTTPS URL of the MA web/API server (port 8095); used as MA_API_URL
     url:
+    # -- Public HTTPS URL that proxies the MA stream port (8097); used as MA_HOSTNAME
+    streamUrl:
     apiToken:
   alexaSkill:
     url:
     username:
     password:
+    # -- Skill ID (amzn1.ask.skill....) shown by /setup; restricts requests to this skill
+    skillId: ""
+    locale: en-US
     enableAPL: false
+    skipUrlValidation: false
 
 workload:
   main:
@@ -35,16 +42,34 @@ workload:
           enabled: true
           primary: false
           imageSelector: alexaSkill
+          securityContext:
+            # The upstream image writes to /app/{build,tmp} and expects ASK CLI
+            # credentials under /root/.ask, so it has to run as root.
+            runAsUser: 0
+            runAsGroup: 0
+            readOnlyRootFilesystem: false
           env:
             SKILL_HOSTNAME: '{{ .Values.config.alexaSkill.url }}'
-            MA_HOSTNAME: '{{ .Values.config.server.url }}'
+            SKILL_ID: '{{ .Values.config.alexaSkill.skillId }}'
+            MA_HOSTNAME: '{{ .Values.config.server.streamUrl | default .Values.config.server.url }}'
+            MA_API_URL: '{{ .Values.config.server.url }}'
             MA_API_TOKEN: '{{ .Values.config.server.apiToken }}'
-            APP_USERNAME: /run/secrets/APP_USERNAME
-            APP_PASSWORD: /run/secrets/APP_PASSWORD
+            APP_USERNAME:
+              secretKeyRef:
+                name: main
+                key: APP_USERNAME
+            APP_PASSWORD:
+              secretKeyRef:
+                name: main
+                key: APP_PASSWORD
             PORT: '{{ (index .Values.service.main.ports "alexa-skill").targetPort | default (index .Values.service.main.ports "alexa-skill").port }}'
-            DEBUG_PORT: '{{ (index .Values.service.main.ports "alexa-debug").targetPort | default (index .Values.service.main.ports "alexa-debug").port }}'
-            LOCALE: en-US # optional: skill locale (e.g. en-US, en-GB, de-DE)
-            AWS_DEFAULT_REGION: us-east-1 #optional
+            # 0 disables debugpy; a non-zero port exposes remote code execution
+            DEBUG_PORT: "0"
+            LOCALE: '{{ .Values.config.alexaSkill.locale }}'
+            ENABLE_APL: '{{ .Values.config.alexaSkill.enableAPL }}'
+            SKIP_URL_VALIDATION: '{{ .Values.config.alexaSkill.skipUrlValidation }}'
+            DEVICE_MAPPING_PATH: /root/.ask/device_players.json
+            AWS_DEFAULT_REGION: us-east-1
           probes:
             liveness:
               enabled: true
@@ -79,11 +104,6 @@ service:
         port: 5000
         targetPort: 5000
         protocol: tcp
-      alexa-debug:
-        enabled: true
-        port: 5678
-        targetPort: 5678
-        protocol: tcp
       bonjour:
         enabled: true
         port: 5353
@@ -115,13 +135,14 @@ secret:
       APP_PASSWORD: '{{ .Values.config.alexaSkill.password }}'
 
 persistence:
-  secrets:
-    enabled: true
-    mountPath: "/run/secrets"
+  # ASK CLI credentials plus the Echo-to-MA device mapping for the skill container
   alexa-skill-ask-data:
     enabled: true
-    mountPath: /data/root/.ask
-    readOnly: false
+    targetSelector:
+      main:
+        alexa-skill:
+          mountPath: /root/.ask
+          readOnly: false
   data:
     enabled: true
     mountPath: /data
