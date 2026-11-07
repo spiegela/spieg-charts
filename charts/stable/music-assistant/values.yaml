@@ -51,7 +51,8 @@ workload:
           env:
             SKILL_HOSTNAME: '{{ .Values.config.alexaSkill.url }}'
             SKILL_ID: '{{ .Values.config.alexaSkill.skillId }}'
-            MA_HOSTNAME: '{{ .Values.config.server.streamUrl | default .Values.config.server.url }}'
+            # The skill wants a bare host here; it prepends https:// itself
+            MA_HOSTNAME: '{{ .Values.config.server.streamUrl | default .Values.config.server.url | trimPrefix "https://" | trimPrefix "http://" | trimSuffix "/" }}'
             MA_API_URL: '{{ .Values.config.server.url }}'
             MA_API_TOKEN: '{{ .Values.config.server.apiToken }}'
             APP_USERNAME:
