@@ -1,6 +1,6 @@
 image:
   repository: spiegela/comic-utils
-  tag: v4.12.1
+  tag: v7.1
   pullPolicy: Always
 
 service:
