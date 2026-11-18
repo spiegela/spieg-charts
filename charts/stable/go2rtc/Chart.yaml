@@ -1,0 +1,28 @@
+apiVersion: v2
+appVersion: "1.9.15"
+dependencies:
+  - name: common
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []
+deprecated: false
+home: https://github.com/AlexxIT/go2rtc
+icon: https://raw.githubusercontent.com/AlexxIT/go2rtc/master/assets/logo.png
+keywords:
+  - camera
+  - webrtc
+  - rtsp
+  - home-assistant
+kubeVersion: ">=1.16.0-0"
+maintainers:
+  - email: spiegela@gmail.com
+    name: Aaron Spiegel
+name: go2rtc
+description: Camera streaming server (WebRTC, RTSP, Roborock vacuum cameras) behind Home Assistant's WebRTC Camera integration
+sources:
+  - https://github.com/AlexxIT/go2rtc
+type: application
+version: 0.0.1

@@ -1,0 +1,117 @@
+image:
+  repository: alexxit/go2rtc
+  pullPolicy: IfNotPresent
+  tag: 1.9.15
+
+go2rtc:
+  # LAN address the browser reaches for WebRTC media (the `webrtc` LoadBalancer IP); required for video to flow
+  candidate: ""
+  # Home Assistant config dir mounted read-only at /config: go2rtc's WebUI (Add > Roborock) reads the core Roborock
+  # integration's login from it to list the vacuums and hand out their roborock:// sources
+  hassConfig: true
+  # name -> go2rtc source; empty sources are skipped (deploy first, copy the source out of the WebUI, then set it)
+  streams: {}
+
+service:
+  # API + WebUI: cluster-internal only. It has no auth and shows camera sources (cloud tokens); Home Assistant reaches
+  # it by service DNS, people by `kubectl port-forward svc/go2rtc 1984`.
+  main:
+    type: ClusterIP
+    ports:
+      main:
+        enabled: true
+        primary: true
+        protocol: http
+        port: 1984
+        targetPort: 1984
+  # WebRTC media straight to the browser (the signalling goes through Home Assistant)
+  webrtc:
+    enabled: true
+    type: LoadBalancer
+    ports:
+      webrtc-tcp:
+        enabled: true
+        primary: true
+        protocol: tcp
+        port: 8555
+        targetPort: 8555
+      webrtc-udp:
+        enabled: true
+        protocol: udp
+        port: 8555
+        targetPort: 8555
+
+persistence:
+  config:
+    enabled: true
+    type: secret
+    objectName: config
+    expandObjectName: true
+    mountPath: /config/go2rtc.yaml
+    subPath: go2rtc.yaml
+    readOnly: true
+  hass:
+    enabled: false
+    type: hostPath
+    hostPath: ""
+    mountPath: /hass
+    readOnly: true
+
+portal:
+  open:
+    enabled: false
+
+workload:
+  main:
+    podSpec:
+      containers:
+        main:
+          args:
+            - -config
+            - /config/go2rtc.yaml
+          probes:
+            liveness:
+              enabled: true
+              type: http
+              port: 1984
+              path: /api
+            readiness:
+              enabled: true
+              type: http
+              port: 1984
+              path: /api
+            startup:
+              enabled: true
+              type: tcp
+              port: 1984
+
+securityContext:
+  container:
+    readOnlyRootFilesystem: false
+    runAsNonRoot: false
+    runAsUser: 0
+    runAsGroup: 0
+
+secret:
+  config:
+    enabled: true
+    data:
+      go2rtc.yaml: |-
+        api:
+          listen: ":1984"
+        rtsp:
+          listen: ""
+        webrtc:
+          listen: ":8555"
+          candidates:
+            - {{ .Values.go2rtc.candidate | required "go2rtc.candidate (LAN ip:8555) is required" }}
+        {{- if .Values.persistence.hass.enabled }}
+        hass:
+          config: /hass
+        {{- end }}
+        streams:
+        {{- range $name, $src := .Values.go2rtc.streams }}
+        {{- if $src }}
+          {{ $name }}: {{ $src | quote }}
+        {{- end }}
+        {{- end }}
