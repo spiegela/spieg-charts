@@ -66,6 +66,9 @@ workload:
     podSpec:
       containers:
         main:
+          # the image's ENTRYPOINT is tini and its CMD runs go2rtc: args alone would replace the CMD, so name the binary
+          command:
+            - go2rtc
           args:
             - -config
             - /config/go2rtc.yaml

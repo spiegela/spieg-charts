@@ -25,4 +25,4 @@ description: Camera streaming server (WebRTC, RTSP, Roborock vacuum cameras) beh
 sources:
   - https://github.com/AlexxIT/go2rtc
 type: application
-version: 0.0.1
+version: 0.0.2
