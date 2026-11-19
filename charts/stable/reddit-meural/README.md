@@ -9,7 +9,7 @@ Values:
 - `config`: the tool's `config.yaml` (subreddits, filters, gallery, device). Paths point into `/data`. Credential
   fields stay `${VAR}` placeholders: the tool expands them from the environment.
 - `credentialsSecret`: an existing Secret loaded as env: `MEURAL_USERNAME`, `MEURAL_PASSWORD` (required),
-  `METRON_API_TOKEN`, `COMICVINE_API_KEY`, `REDDIT_USERNAME` (user agent).
+  `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET` (Reddit OAuth app), `METRON_API_TOKEN`, `COMICVINE_API_KEY`, `REDDIT_USERNAME` (user agent).
 - `persistence.data`: where state lives (set a hostPath / PVC; keep it across upgrades or everything re-uploads).
 
 Run once now: `kubectl -n <ns> create job --from=cronjob/<release> reddit-meural-manual`.

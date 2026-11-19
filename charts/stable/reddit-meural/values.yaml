@@ -1,7 +1,7 @@
 image:
   repository: spiegela/reddit-meural
   pullPolicy: IfNotPresent
-  tag: 0.1.0
+  tag: 0.1.1
 
 # The tool's config.yaml (https://github.com/spiegela/reddit-meural/blob/main/config.example.yaml). State paths point
 # into /data. Credential fields stay ${VAR} placeholders: the tool expands them from the env (`credentials` below).
@@ -14,13 +14,21 @@ config:
     min_score: 1000
     include_over_18: false
     include_spoilers: false
-    user_agent: "reddit-meural/0.1 by ${REDDIT_USERNAME:-local}"
+    # Reddit OAuth (a "script" app from reddit.com/prefs/apps); anonymous reads are blocked. Unset -> Reddit skipped.
+    client_id: "${REDDIT_CLIENT_ID:-}"
+    client_secret: "${REDDIT_CLIENT_SECRET:-}"
+    user_agent: "linux:reddit-meural:0.1 (by /u/${REDDIT_USERNAME:-local})"
   comic_covers:
     enabled: false
     user_agent: "artwork-meural/0.1 by ${REDDIT_USERNAME:-local}"
     enable_gcd: false
     comicvine_api_key: "${COMICVINE_API_KEY:-}"
     metron_api_token: "${METRON_API_TOKEN:-}"
+    sources: []
+  # Public-domain museum art, no keys. provider: aic | met | cleveland | wikidata (collection: QID). See the
+  # tool's config.example.yaml.
+  museums:
+    enabled: false
     sources: []
   images:
     cache_dir: /data/images
@@ -57,14 +65,29 @@ config:
       Original discussion: {permalink}
 
       Reddit score at collection time: {score}
+    # Per source type/kind overrides of the templates above ({date}, {medium} extra; museums fill medium/year).
+    sources:
+      comic:
+        artist_template: "{author}"
+        description_template: |
+          {title}
+
+          {source_name}: {permalink}
+      museum:
+        artist_template: "{author}"
+        description_template: |
+          {title}, {date}
+          {medium}
+
+          {source_name}: {permalink}
   sync:
     database: /data/reddit-meural.sqlite3
     max_uploads_per_run: 10
     sleep_between_uploads_seconds: 2
     dry_run: false
 
-# An existing Secret (same namespace) loaded as env: MEURAL_USERNAME, MEURAL_PASSWORD (required); METRON_API_TOKEN,
-# COMICVINE_API_KEY, REDDIT_USERNAME (optional). Kept out of the chart so it can live beside the
+# An existing Secret (same namespace) loaded as env: MEURAL_USERNAME, MEURAL_PASSWORD (required); REDDIT_CLIENT_ID,
+# REDDIT_CLIENT_SECRET, METRON_API_TOKEN, COMICVINE_API_KEY, REDDIT_USERNAME (optional). Kept out of the chart so it can live beside the
 # release (e.g. SOPS / Flux substitution).
 credentialsSecret: ""
 
