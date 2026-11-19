@@ -1,13 +1,14 @@
 image:
-  repository: spiegela/reddit-meural
+  repository: spiegela/meural-curator
   pullPolicy: IfNotPresent
-  tag: 0.1.1
+  tag: 0.2.0
 
-# The tool's config.yaml (https://github.com/spiegela/reddit-meural/blob/main/config.example.yaml). State paths point
+# The tool's config.yaml (https://github.com/spiegela/meural-curator/blob/main/config.example.yaml). State paths point
 # into /data. Credential fields stay ${VAR} placeholders: the tool expands them from the env (`credentials` below).
 config:
   reddit:
-    subreddits: [ArtPorn, Museum, vintageart, Illustration, oilpainting, Watercolor, ImaginaryCharacters, SpecArt]
+    # Needs an approved Reddit OAuth app (client_id/secret below); empty = Reddit off.
+    subreddits: []
     listing: top
     time_filter: month
     limit_per_subreddit: 40
@@ -17,10 +18,10 @@ config:
     # Reddit OAuth (a "script" app from reddit.com/prefs/apps); anonymous reads are blocked. Unset -> Reddit skipped.
     client_id: "${REDDIT_CLIENT_ID:-}"
     client_secret: "${REDDIT_CLIENT_SECRET:-}"
-    user_agent: "linux:reddit-meural:0.1 (by /u/${REDDIT_USERNAME:-local})"
+    user_agent: "linux:meural-curator:0.2 (by /u/${REDDIT_USERNAME:-local})"
   comic_covers:
     enabled: false
-    user_agent: "artwork-meural/0.1 by ${REDDIT_USERNAME:-local}"
+    user_agent: "meural-curator/0.2 (personal Meural art frame)"
     enable_gcd: false
     comicvine_api_key: "${COMICVINE_API_KEY:-}"
     metron_api_token: "${METRON_API_TOKEN:-}"
@@ -28,8 +29,18 @@ config:
   # Public-domain museum art, no keys. provider: aic | met | cleveland | wikidata (collection: QID). See the
   # tool's config.example.yaml.
   museums:
-    enabled: false
-    sources: []
+    enabled: true
+    sources:
+      - name: Impressionism
+        provider: aic
+        query: impressionism
+        max_items: 25
+      - name: European Paintings
+        provider: met
+        query: painting
+        max_items: 15
+        params:
+          departmentId: 11
   images:
     cache_dir: /data/images
     max_dimension: 4096
@@ -43,7 +54,7 @@ config:
     password: "${MEURAL_PASSWORD}"
     token_cache: /data/meural-token.json
     gallery_id: null
-    gallery_name: "Reddit Curated"
+    gallery_name: "Curated Art"
     create_gallery_if_missing: true
     device_name: ""
     sync_gallery_to_device: true
@@ -81,7 +92,7 @@ config:
 
           {source_name}: {permalink}
   sync:
-    database: /data/reddit-meural.sqlite3
+    database: /data/meural-curator.sqlite3  # an old reddit-meural.sqlite3 beside it is adopted
     max_uploads_per_run: 10
     sleep_between_uploads_seconds: 2
     dry_run: false
@@ -113,7 +124,7 @@ workload:
       restartPolicy: Never
       containers:
         main:
-          # the image's ENTRYPOINT is reddit-meural; these replace its CMD
+          # the image's ENTRYPOINT is meural-curator; these replace its CMD
           args:
             - sync
             - --config
@@ -144,7 +155,7 @@ configmap:
     enabled: true
     data:
       config.yaml: |-
-        # reddit-meural config (chart values: config)
+        # meural-curator config (chart values: config)
         {{- toYaml .Values.config | nindent 2 }}
 
 persistence:

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0
+
+- Renamed from `reddit-meural` (app 0.2.0, image `spiegela/meural-curator`). Museums on by default (AIC, The Met),
+  Reddit off by default (needs an approved OAuth app), gallery `Curated Art`, database `/data/meural-curator.sqlite3`
+  (an existing `reddit-meural.sqlite3` there is adopted).
+
 ## 0.0.2
 
 - reddit-meural 0.1.1: Reddit via OAuth (`REDDIT_CLIENT_ID` / `REDDIT_CLIENT_SECRET`; anonymous reads are blocked),

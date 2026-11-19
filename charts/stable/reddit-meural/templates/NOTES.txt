@@ -1,2 +1,0 @@
-reddit-meural runs on "{{ .Values.workload.main.schedule }}"{{ if .Values.workload.main.suspend }} (suspended){{ end }}.
-Run it now: kubectl -n {{ .Release.Namespace }} create job --from=cronjob/{{ include "tc.v1.common.lib.chart.names.fullname" . }} reddit-meural-manual

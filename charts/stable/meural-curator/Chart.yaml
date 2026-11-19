@@ -1,5 +1,5 @@
 apiVersion: v2
-appVersion: "0.1.1"
+appVersion: "0.2.0"
 dependencies:
   - name: common
     version: 28.29.17
@@ -9,18 +9,18 @@ dependencies:
     tags: []
     import-values: []
 deprecated: false
-home: https://github.com/spiegela/reddit-meural
+home: https://github.com/spiegela/meural-curator
 keywords:
   - meural
-  - reddit
+  - museum
   - art
 kubeVersion: ">=1.16.0-0"
 maintainers:
   - email: spiegela@gmail.com
     name: Aaron Spiegel
-name: reddit-meural
-description: Scheduled curation of Reddit art and comic covers into a Meural Canvas gallery (CronJob)
+name: meural-curator
+description: Scheduled curation of public-domain museum art and comic covers into a Meural Canvas gallery (CronJob)
 sources:
-  - https://github.com/spiegela/reddit-meural
+  - https://github.com/spiegela/meural-curator
 type: application
-version: 0.0.2
+version: 0.1.0
