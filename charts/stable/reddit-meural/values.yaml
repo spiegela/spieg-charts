@@ -20,8 +20,7 @@ config:
     user_agent: "artwork-meural/0.1 by ${REDDIT_USERNAME:-local}"
     enable_gcd: false
     comicvine_api_key: "${COMICVINE_API_KEY:-}"
-    metron_username: "${METRON_USERNAME:-}"
-    metron_password: "${METRON_PASSWORD:-}"
+    metron_api_token: "${METRON_API_TOKEN:-}"
     sources: []
   images:
     cache_dir: /data/images
@@ -64,8 +63,8 @@ config:
     sleep_between_uploads_seconds: 2
     dry_run: false
 
-# An existing Secret (same namespace) loaded as env: MEURAL_USERNAME, MEURAL_PASSWORD (required); METRON_USERNAME,
-# METRON_PASSWORD, COMICVINE_API_KEY, REDDIT_USERNAME (optional). Kept out of the chart so it can live beside the
+# An existing Secret (same namespace) loaded as env: MEURAL_USERNAME, MEURAL_PASSWORD (required); METRON_API_TOKEN,
+# COMICVINE_API_KEY, REDDIT_USERNAME (optional). Kept out of the chart so it can live beside the
 # release (e.g. SOPS / Flux substitution).
 credentialsSecret: ""
 
