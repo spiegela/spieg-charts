@@ -1,0 +1,26 @@
+apiVersion: v2
+appVersion: "0.1.0"
+dependencies:
+  - name: common
+    version: 28.29.17
+    repository: oci://oci.trueforge.org/truecharts
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []
+deprecated: false
+home: https://github.com/spiegela/reddit-meural
+keywords:
+  - meural
+  - reddit
+  - art
+kubeVersion: ">=1.16.0-0"
+maintainers:
+  - email: spiegela@gmail.com
+    name: Aaron Spiegel
+name: reddit-meural
+description: Scheduled curation of Reddit art and comic covers into a Meural Canvas gallery (CronJob)
+sources:
+  - https://github.com/spiegela/reddit-meural
+type: application
+version: 0.0.1
